@@ -1,0 +1,312 @@
+
+.header
+	position: sticky 
+	left: 0
+	top: 0
+	z-index: 9
+
+	width: 100%
+	will-change: transform
+
+	background: #fff
+	border-bottom: 1px solid #f2f5f8 
+
+	@media (min-width: 1200px)
+		padding-top: 12px
+
+	&.sticky 
+		box-shadow: 0px 4px 12px 0px #0820301F
+			
+	&-top
+		position: relative
+		z-index: 3
+		+adap('padding-block', 20, 12)
+		background: #fff
+
+		&:has(:focus-visible)
+			z-index: 11
+
+		&-wrapper
+			display: grid
+			grid-template-columns: auto 1fr repeat(2, auto)
+			align-items: center
+			+adap('gap', 20, 12)
+
+	&__contacts
+		display: grid
+		grid-template-columns: repeat(2, auto)
+		+adap('column-gap', 20, 12)
+		gap: 4px
+		order: 2
+
+	&__buttons 
+		display: flex
+		align-items: center
+		+adap('gap', 20, 12)
+		order: 3
+
+		&>* 
+			@media (max-width: #{$firstBreakpoint + px}) or (min-width: #{$firstBreakpoint + 1 + px})
+				min-width: auto
+	
+	&__menu 
+		display: flex
+		align-items: center
+		justify-content: space-between
+		gap: 12px
+
+		font-size: 14px
+		font-weight: 500
+
+		&>li
+			@media (min-width: 1200px)
+				padding-bottom: 8px
+
+			&>a 
+				@media (min-width: 1200px)
+					padding-inline: 12px 
+
+				+hov 
+					color: var(--active)
+
+			
+			&.current-menu-item 
+				@media (max-width: 1199px)
+					&>a
+						color: var(--active)
+
+				@media (min-width: 1200px)
+					position: relative
+
+					&:after
+						content: ''
+
+						position: absolute
+						left: 0
+						bottom: 0
+						width: 100%
+						height: 4px
+
+						border-radius: 4px 4px 0 0
+						background: var(--active)
+
+
+	@media (max-width: #{$burgerMedia+px})
+		$padding-top: 32
+		$padding-bottom: 32
+		$padding-x: 16
+		$mobile-bg: #fff
+
+		border: none
+
+		&__mobile 
+			position: fixed
+			right: -100vw
+			top: 0
+			z-index: 5
+					
+			display: grid 
+			grid-template-columns: 100%
+			justify-items: start
+			align-content: start
+			gap: 20px
+			width: min(500px, 101vw)
+			height: calc(100dvh - #{var(--headerFixedHeight)})
+			padding: #{$padding-top+px} #{$padding-x+px} #{$padding-bottom+px}
+					
+			background: $mobile-bg
+			box-shadow: 0px 4px 12px 0px #0820301F
+					
+			opacity: 0
+			transition: right .3s, opacity .3s
+			+scrollbar(100vh, $scrollBarWidth: 4, $padding: 0) 
+
+			@media (min-width: 576px)
+				border-top-left-radius: 12px
+				border-bottom-left-radius: 12px
+
+			&.active
+				right: 0px
+				opacity: 1
+
+		&-top 
+			position: sticky
+			z-index: 10
+			left: 0
+			top: 0
+			padding-block: 8px 
+
+			background: #fff
+			box-shadow: 0px 4px 12px 0px #0820301F
+
+		&__nav 
+			width: 100%
+			order: -1
+
+		&__menu
+			display: grid
+			grid-template-columns: 100%
+			justify-items: start
+			gap: 20px  
+			width: 100%
+
+		&__search
+			order: -2
+			width: 100%
+
+	@media (max-width: 767px)
+		&-top 
+			&-wrapper
+				grid-template-columns: auto 1fr auto
+
+		&__call 
+			justify-self: end
+
+		&__search 
+			order: -2
+
+		&__buttons 
+			flex-wrap: wrap
+
+			&>*
+				flex-grow: 1
+
+	@media (max-width: 575px)
+		&__contacts
+			grid-template-columns: 100%
+
+		&__call 
+			gap: 20px
+
+		&__tel 
+			svg 
+				width: 24px
+				translate: 0 0
+
+		&__social 
+			gap: 20px
+
+			.social
+				&__item
+					svg 
+						width: 24px
+
+
+.header-main 
+	&__wrapper
+		display: grid
+		grid-template-columns: 1.5fr 1fr 
+
+		+adap('border-radius', 40, 16)
+		background: #fff
+		box-shadow: 0px 4px 12px 0px rgba(0, 67, 139, 0.08)
+		overflow: hidden
+
+	&__left 
+		display: grid
+		+adap('gap', 20, 12)
+		align-content: start
+		justify-items: start
+
+		+adap('padding-block', 80, 20)
+		+adap('padding-inline', 48, 16)
+
+	&__img 
+		img
+			width: 100%
+			object-fit: cover
+
+	@media (max-width: 991px)
+		&__wrapper
+			grid-template-columns: 100%
+
+		&__img 
+			+adap('max-height', 500, 300)
+
+	@media (max-width: 575px)
+		&__wrapper
+			margin-inline: -#{$containerPadding}px
+
+				
+
+
+
+
+
+
+
+
+
+
+				
+
+
+
+
+
+
+
+
+
+
+				
+
+
+
+
+
+
+
+
+
+
+				
+
+
+
+
+
+
+
+
+
+
+				
+
+
+
+
+				
+
+
+
+
+
+
+
+
+
+
+				
+
+
+
+
+
+
+
+
+
+
+				
+
+
+
+
+
+
+
+
+
+
+				

@@ -1,0 +1,43 @@
+
+
+.title 
+	+title
+
+	strong, span 
+		color: var(--active)
+
+	&-2
+		+title-2
+
+	&-3
+		+title-3
+
+	&-4
+		+title-4
+
+	&-center
+		text-align: center
+      
+.text-center 
+	text-align: center
+
+.link 
+	color: var(--gray_dark)
+
+	text-decoration: underline
+	text-decoration-skip-ink: none
+	text-decoration-style: dashed
+	text-underline-offset: .2lh
+	+t
+
+	+hov
+		text-decoration-color: transparent
+
+.gray-text 
+	color: var(--gray_dark)
+
+.active-text 
+	color: var(--active)
+	
+.small-text 
+	+adap('font-size', 14, 12)

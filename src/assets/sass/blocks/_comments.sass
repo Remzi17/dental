@@ -1,0 +1,167 @@
+.comments
+	&__wrapper
+		// +adap('margin-bottom', -20, -12)
+
+		&:empty 
+			display: none 
+
+	&__top 
+		display: grid
+		gap: 8px
+		+adap('margin-bottom', 20, 16)
+
+:root
+	interpolate-size: allow-keywords
+  
+.comment
+
+	transition: all .4s
+
+	&:not(:last-of-type)
+		+adap('margin-bottom', 20, 12)
+		padding-bottom: 12px
+		border-bottom: 1px solid var(--gray_dark)
+
+	&:last-child
+		border-bottom-color: transparent 
+
+	&.bounceOutTop 
+		animation: fadeInTop .4s forwards
+ 
+	&.bounceOutLeft 
+		height: 0
+		margin: 0
+		padding: 0
+		translate: -100px 0
+		opacity: 0
+		border: 0
+
+	&__header,
+	&__text
+		margin-bottom: 12px
+
+	&__author 
+		display: flex
+		align-items: center
+		gap: 8px
+		
+		&-img 
+			+adap('width', 48, 32)
+			+adap('height', 48, 32)
+
+			border-radius: 50% 
+			object-fit: cover
+
+	&__date,
+	&__like,
+	&__dislike,
+	&__delete, 
+	&__button 
+		display: flex
+		align-items: center
+		gap: 4px
+
+		&[disabled]
+			pointer-events: none  
+
+		svg 
+			width: 1em
+			height: 1em
+
+			fill: currentColor
+			transition: none 
+		
+	&__like 
+		&.active  
+			color: var(--active)
+
+			svg  
+				fill: var(--active)
+
+	&__dislike
+		&.active  
+			color: #f03
+
+			svg  
+				fill: #f03
+
+	&__like,
+	&__dislike
+		span 
+			width: 13px
+			 
+	&__meta 
+		display: flex
+		align-items: center
+		gap: 12px
+		margin-bottom: 12px
+
+		font-weight: 500
+
+		&+:is(.comment, .comment-add)
+			// margin-top: -12px
+
+	&__delete 
+		&.disabled  
+			opacity: .8
+			pointer-events: none
+
+	& &
+		+adap('margin-left', 60, 32)
+
+	&-add 
+		position: relative
+		display: grid
+		+adap('gap', 12, 8)
+
+		&:not(:last-child)
+			margin-bottom: 20px
+
+		&__button 
+			justify-self: start
+
+		textarea 
+			@supports (field-sizing: content)
+				field-sizing: content
+				height: auto
+				padding-block: 14.75px
+
+	& &-add
+		+adap('margin-top', 20, 12)
+
+	&__content 
+		position: relative
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

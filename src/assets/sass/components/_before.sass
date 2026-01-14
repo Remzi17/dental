@@ -1,0 +1,101 @@
+[data-splitview]
+	position: relative
+	
+	&:before,
+	&:after 
+		position: absolute
+		+adap('bottom', 20, 12)
+		z-index: 3
+		+adap('padding-block', 4, 2)
+		+adap('padding-inline', 16, 12)
+		
+		border-radius: 4px
+		background: rgba(#fff, .9)
+
+		+adap('font-size', 12, 10)
+
+	&:before 
+		content: 'До'
+		+adap('left', 20, 12)
+	
+	&:after 
+		content: 'После'
+		+adap('right', 20, 12)
+	
+
+[data-splitview-before],
+[data-splitview-after] 
+	display: flex
+
+	img 
+		user-select: none
+
+[data-splitview-before] 
+	filter: grayscale(10%)
+
+	img 
+		width: 100%
+	
+[data-splitview-after] 
+	position: absolute
+	top: 0
+	right: 0
+	width: 50%
+	height: 100%
+	overflow: hidden
+
+	img 
+		position: absolute
+		top: 0
+		right: 0
+		max-width: none
+		height: 100%
+	
+[data-splitview-arrow]
+	position: absolute
+	left: 50%
+	top: 0
+	z-index: 2
+
+	+adap('width', 4, 2)
+	height: 100%
+	translate: 50% 0
+	background-color: #fff
+	cursor: ew-resize	
+
+	&:focus-within
+		outline: 1px solid red
+
+	input
+		position: absolute
+		inset: 0
+		z-index: 5
+		width: 100%
+		height: 100%
+		opacity: 0
+		cursor: ew-resize
+		appearance: none
+		pointer-events: none
+
+	&:before,
+	&:after
+		content: ''
+		position: absolute
+		left: 50%
+		top: 50%
+		translate: -50% -50%
+
+	&:before
+		+adap('width', 40, 32)
+		aspect-ratio: 1
+
+		background: #fff
+		border-radius: 50%
+
+	&:after
+		+adap('width', 16, 12)
+		+adap('height', 16, 12)
+		+mask(url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIj8+PCFET0NUWVBFIHN2ZyAgUFVCTElDICctLy9XM0MvL0RURCBTVkcgMS4xLy9FTicgICdodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQnPjxzdmcgZW5hYmxlLWJhY2tncm91bmQ9Im5ldyAwIDAgMzIgMzIiIGhlaWdodD0iMzJweCIgaWQ9ItCh0LvQvtC5XzEiIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDMyIDMyIiB3aWR0aD0iMzJweCIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+PGcgaWQ9IkRvdWJsZV9DaGV2cm9uIj48cGF0aCBkPSJNMzEuNzA4LDE1LjI4NmwtOS4wMDItOC45OTljLTAuMzk1LTAuMzk0LTEuMDM1LTAuMzk0LTEuNDMxLDBjLTAuMzk1LDAuMzk0LTAuMzk1LDEuMDM0LDAsMS40MjhMMjkuNTYzLDE2ICAgbC04LjI4Nyw4LjI4NWMtMC4zOTUsMC4zOTQtMC4zOTUsMS4wMzQsMCwxLjQyOWMwLjM5NSwwLjM5NCwxLjAzNiwwLjM5NCwxLjQzMSwwbDkuMDAyLTguOTk5ICAgQzMyLjA5NywxNi4zMjUsMzIuMDk3LDE1LjY3NSwzMS43MDgsMTUuMjg2eiIgZmlsbD0iIzEyMTMxMyIvPjxwYXRoIGQ9Ik0xMC43MjUsNi4yODdjLTAuMzk1LTAuMzk0LTEuMDM2LTAuMzk0LTEuNDMxLDBsLTkuMDAyLDguOTk5Yy0wLjM5LDAuMzg5LTAuMzksMS4wMzksMCwxLjQyOWw5LjAwMiw4Ljk5OSAgIGMwLjM5NSwwLjM5NCwxLjAzNSwwLjM5NCwxLjQzMSwwYzAuMzk1LTAuMzk0LDAuMzk1LTEuMDM0LDAtMS40MjhMMi40MzcsMTZsOC4yODctOC4yODVDMTEuMTIsNy4zMjEsMTEuMTIsNi42ODEsMTAuNzI1LDYuMjg3eiIgZmlsbD0iIzEyMTMxMyIvPjwvZz48Zy8+PGcvPjxnLz48Zy8+PGcvPjxnLz48L3N2Zz4=") center / contain no-repeat, var(--text))
+
+		
+

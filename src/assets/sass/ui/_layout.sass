@@ -1,0 +1,47 @@
+
+
+.column
+	display: grid
+	grid-template-columns: 100%
+	+adap('gap', 20, 12)
+	align-content: start
+
+.columns-layout 
+	display: grid
+	gap: var(--gap)
+	align-items: start
+	--gap: min(16px + 16px, 16px + 16 * ((100vw - 320px) / 1600))
+	--min-columns-width: 260px
+	--max-columns: 4 
+			
+	grid-template-columns: repeat(auto-fill, minmax(clamp(var(--min-columns-width), 30vw, calc(100% / var(--max-columns) - var(--gap)/var(--max-columns)*(var(--max-columns) - 1))), 1fr))
+
+	@media (max-width: 1199px)
+		grid-template-columns: repeat(2, 1fr)
+
+	@media (max-width: 575px)
+		grid-template-columns: 100%
+
+.row 
+	display: flex
+	+adap('gap', 20, 12)
+	+scrollbar-x(100%, $scrollBarHeight: 8, $padding: 9) 
+
+	scroll-snap-type: x mandatory
+
+	&>*
+		flex: 0 0 min(300px, 80vw)
+		scroll-snap-align: start
+
+.icon 
+	display: flex
+	align-items: center
+	justify-content: center
+
+	&:before
+		content: ''
+
+		width: 90%
+		height: 90%
+
+		+mask(var(--icon) center / contain no-repeat, var(--active))

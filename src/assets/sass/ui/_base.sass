@@ -1,0 +1,100 @@
+.main	
+	+adap('padding-bottom', math.div($section_gap, 2), 24)
+
+	&>*
+		&:nth-child(odd)
+			&:not(.header)
+				// z-index: 2
+				// +adap('margin-block', math.div($section_gap, 2), 24)
+				// +adap('padding-block', $section_gap, 48)
+
+				// background: linear-gradient(180deg, color-mix(in srgb, var(--active) 5%, white) 0%, color-mix(in srgb, var(--active) 15%, white) 100%)
+
+body 
+	+adap('font-size', 16, 15)
+	line-height: 1.6
+	
+.section
+	position: relative
+	+adap('padding-block', math.div($section_gap, 2), 24)
+
+	&-small
+		+adap('padding-block', math.div($section_gap, 3), 16)
+
+		&-top 
+			+adap('padding-top', math.div($section_gap, 3), 16)   
+
+		&-bottom 
+			+adap('padding-bottom', math.div($section_gap, 3), 16)
+
+	&-bottom
+		+adap('padding-bottom', math.div($section_gap, 2), 24)
+
+	&-top
+		+adap('padding-top', math.div($section_gap, 2), 24)
+
+	&-big
+		+adap('padding-block', $section_gap, 40)
+
+	&-offset
+		+adap('margin-block', math.div($section_gap, 2), 24)
+		
+		&+.section-offset
+			+adap('margin-top', math.div($section_gap*-1, 2), -24)
+
+		&-top 
+			+adap('margin-top', math.div($section_gap, 2), 24)
+
+		&-bottom 
+			+adap('margin-bottom', math.div($section_gap, 2), 24)
+
+	&-bg 
+		.checkbox
+			&__input 
+				&:before
+					border-color: #fff
+
+				&:after
+					background: #fff
+
+		button, a
+			&:focus-visible
+				outline-color: #fff 
+			
+		input, textarea 
+			&:focus-visible
+				box-shadow: inset 0 0 0 2px var(--text)
+				
+
+	&__bg 
+		position: absolute
+		left: 0
+		top: 0
+		translate: -20% -20%
+		// +adap('width', 1000, 800)
+		// +adap('height', 1000, 800)
+		scale: 1.5
+
+		object-fit: contain
+
+	&__top 
+		display: flex
+		align-items: center
+		justify-content: space-between
+		flex-wrap: wrap
+		+adap('gap', 20, 12)
+		+adap('margin-bottom', 40, 20)
+
+		&-center 
+			justify-items: center
+
+	&-gray
+		background: color-mix(in srgb, var(--active) 6%, white 94%)
+
+		.swiper-pagination-bullet 
+			background: #fff
+
+			&-active 
+				background: $active
+
+

@@ -1,0 +1,193 @@
+
+.text-block   
+	display: grid
+	+adap('gap', 24, 16)
+	text-wrap: pretty 
+
+	&>*:last-child
+		margin-bottom: 0
+
+	h1, h2, h3, b, strong
+		font-weight: 700
+
+	h2
+		+title-2
+
+	h3
+		+title-3
+
+	h4
+		+title-4
+
+	// Списки 
+	$dots-size: 6
+	$dots-size-mobile: 6
+	$dots-gap: 16 // Отступ между маркером и текстом
+	$dots-gap-mobile: 12
+
+	$list-padding: 16 // Внешние отступы
+	$list-padding-mobile: 12
+
+	$li-gap: 8 // gap между li
+	$li-gap-mobile: 8
+
+	ul, ol  
+		display: grid
+
+		@if ($li-gap == $li-gap-mobile)
+			gap: #{$li-gap+px}
+
+		@else
+			+adap('gap', $li-gap, $li-gap-mobile)
+
+		a
+			text-decoration: none
+
+		ul, ol
+			padding-top: 12px
+
+		li>*:not(a)
+			display: contents
+
+	ul
+		&>li
+			position: relative
+
+			@if ($dots-gap == $dots-gap-mobile)
+				padding-left: #{$dots-size+$dots-gap+px}
+
+			@else 
+				+adap('padding-left', calculate($dots-size, $dots-gap), calculate($dots-size-mobile, $dots-gap-mobile))
+
+			&:before
+				content: ''
+						
+				position: absolute
+				left: 0 
+				top: calc(.5lh - #{math.div($dots-size, 2)+px})
+	
+				@if ($dots-size == $dots-size-mobile)
+					width: #{$dots-size+px}
+					height: #{$dots-size+px}
+					flex-basis: #{$dots-size+px}
+
+				@else
+					+adap('width', $dots-size, $dots-size-mobile)
+					+adap('height', $dots-size, $dots-size-mobile)
+					+adap('flex-basis', $dots-size, $dots-size-mobile)
+				
+				flex-grow: 0
+				flex-shrink: 0
+
+				background: var(--active)
+				border-radius: 50% 
+	
+	ol
+		list-style: none
+		counter-reset: number 
+ 
+		&>li
+			&:before
+				counter-increment: number 
+				content: counters(number,".") ". "
+
+				font: inherit
+		ol
+			padding-left: 20px
+
+	blockquote
+		display: flex
+		margin: 0
+		+adap('padding', 40, 16)
+		+adap('gap', 20, 12)
+
+		background: var(--gray)
+		+adap('border-radius', 20, 16)
+		font-style: italic
+
+		&:before,
+		&:after
+			content: ''
+			+adap('flex-basis', 40, 24)
+			+adap('height', 40, 24) 
+			flex-shrink: 0
+
+			opacity: .5
+
+		&:before
+			+mask(url(../img/icons/quotes-left.svg) center / contain no-repeat, var(--active))
+			align-self: flex-start
+									
+		&:after
+			+mask(url(../img/icons/quotes-right.svg) center / contain no-repeat, var(--active))
+			align-self: end 	
+
+	.table
+		width: 100%
+		overflow-y: hidden
+		overflow-x: auto
+		-webkit-overflow-scrolling: touch
+
+		+scrollbar-x(100%, $scrollBarHeight: 4, $padding: 0) 
+		border-radius: 12px
+		background: #fff
+		 
+	table 
+		width: 100% !important 
+		border-collapse: collapse
+		+adap('font-size', 16, 14)
+
+		th
+			font-weight: 700
+			text-align: left
+
+		td, th
+			+adap('padding', 16, 12) 
+	
+		thead
+			background: var(--active)
+
+			td, th
+				background: var(--active)
+				color: #fff
+	 
+		tbody 
+			tr
+				&:nth-child(even)
+					background: var(--gray)
+ 
+		&:not(:has(thead))
+			tbody 
+				tr
+					position: relative
+
+					&>th:first-child
+						position: sticky
+						left: 0
+						top: 0
+
+						background: inherit
+
+	video 
+		max-width: 100%
+		object-fit: cover
+
+	mark 
+		margin-right: 4px
+		padding: 4px 8px
+
+		background: light(var(--active), 8%)
+		border-radius: 4px
+		
+		color: #fff
+
+	img 
+		+brs
+
+	a 
+		+underline
+
+		+hov
+			color: $active
+		
+

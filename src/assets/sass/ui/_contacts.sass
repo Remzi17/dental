@@ -1,0 +1,47 @@
+
+.call 
+	display: flex
+	align-items: center
+	gap: 16px
+
+.address, .time, .tel, .email
+	display: flex
+	align-items: flex-start
+	gap: 12px
+
+	svg 
+		translate: 0 .2lh
+
+		width: em(16)
+		aspect-ratio: 1
+		flex-shrink: 0
+
+		fill: var(--active)
+		transition: none
+
+.tel, .email
+	font-weight: 600
+	white-space: nowrap
+
+.social 
+	display: flex
+	align-items: center
+	gap: 12px
+
+	&__item 
+		display: flex
+		+t
+
+		+hov
+			scale: 1.1
+
+		svg 
+			width: 20px
+			aspect-ratio: 1
+
+			&.telegram-icon 
+				fill: #0084ff
+
+			&.whatsapp-icon 
+				fill: #00b309
+

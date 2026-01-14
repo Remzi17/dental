@@ -1,0 +1,121 @@
+<!-- Модалки -->
+
+<div class="popups">
+	<!-- Заказать звонок -->
+	<div class="popup popup-call" id="popup-call">
+		<div class="popup__dialog">
+			<div class="popup__content">
+				<button class="popup__close" type="button" data-popup-close>
+					<svg class="close">
+						<use xlink:href="assets/img/sprite.svg#close"></use>
+					</svg>
+				</button>
+				<div class="form popup__form">
+					<div class="title-2 popup__title">Заказать звонок</div>
+					<form>
+						<input type="hidden" name="info" class="popup-info">
+						<div class="form__fields form__fields-col">
+							<input class="input" type="text" name="name" placeholder="Имя" required>
+							<input class="input" type="tel" name="phone" placeholder="Телефон" required>
+							<label class="small-text checkbox">
+								<input class="checkbox__input" type="checkbox" checked required>
+								<span class="checkbox__text">Нажимая на кнопку “Отправить”, Вы соглашаетесь с <a href="text.html" class="underline" target="_blank">Политикой конфиденциальности</a></span>
+							</label>
+							<button class="button submit">Отправить</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Оставить отзыв -->
+	<div class="popup popup-feedback" id="popup-feedback">
+		<div class="popup__dialog">
+			<div class="popup__content">
+				<button class="popup__close" type="button" data-popup-close>
+					<svg class="close">
+						<use xlink:href="assets/img/sprite.svg#close"></use>
+					</svg>
+				</button>
+				<div class="form popup__form">
+					<div class="title-2 popup__title">Оставить отзыв</div>
+					<form>
+						<input type="hidden" name="info" class="popup-info">
+						<div class="form__fields" style="--columns: 2">
+							<input class="input" type="text" name="name" placeholder="Ваше имя*" required>
+							<input class="input" type="tel" name="phone" placeholder="Ваш телефон*" required>
+							<select name="branch">
+								<option data-placeholder="true">Филиал</option>
+								<option value="1">ул. Пушкина, 25</option>
+								<option value="2">ул. Гагарина, 20</option>
+							</select>
+							<select name="serivces">
+								<option data-placeholder="true">Услуга</option>
+								<option value="1">Лечение кариеса</option>
+								<option value="2">Лечение пульпита</option>
+								<option value="3">Эстетическая реставрация зубов</option>
+								<option value="4">Профессиональная гигиена</option>
+								<option value="5">Отбеливание</option>
+							</select>
+							<select name="doctor">
+								<option data-placeholder="true">Врач</option>
+								<option value="1">Иванов Алексей Григорьевич</option>
+								<option value="2">Васильева Екатерина Ивановна</option>
+								<option value="3">Сергеев Андрей Викторович</option>
+							</select>
+							<div class="input">
+								<span>Рейтинг*</span>
+								<div class="rating">
+									<div class="rating__item rating__item_set">
+										<div class="rating__body">
+											<div class="rating__active"></div>
+											<div class="rating__items">
+												<input type="radio" value="1" name="rating" required>
+												<input type="radio" value="2" name="rating" required>
+												<input type="radio" value="3" name="rating" required>
+												<input type="radio" value="4" name="rating" required>
+												<input type="radio" value="5" name="rating" required>
+											</div>
+										</div>
+										<div class="rating__value">0</div>
+									</div>
+								</div>
+							</div>
+							<textarea class="textarea" name="message" cols="30" rows="5" placeholder="Ваш отзыв*" required data-columns="full"></textarea>
+							<label class="small-text checkbox" data-columns="full">
+								<input class="checkbox__input" type="checkbox" checked required>
+								<span class="checkbox__text">Нажимая на кнопку “Отправить”, Вы соглашаетесь с <a href="text.html" class="underline" target="_blank">Политикой конфиденциальности</a></span>
+							</label>
+							<button class="button submit justify-center" data-columns="full">Отправить</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Полный отзыв -->
+	<div class="popup popup-reviews" id="popup-reviews">
+		<div class="popup__dialog">
+			<div class="popup__content">
+				<button class="popup__close" type="button" data-popup-close>
+					<svg class="close">
+						<use xlink:href="assets/img/sprite.svg#close"></use>
+					</svg>
+				</button>
+				<div class="popup-reviews__wrapper"></div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Окно благодарности -->
+	<div class="popup popup-thank" id="popup-thank">
+		<div class="popup__dialog">
+			<div class="popup__content">
+				<div class="popup__title">Спасибо за заявку!</div>
+				<img src="assets/img/icons/check.svg" width="80" alt="img">
+			</div>
+		</div>
+	</div>
+</div>

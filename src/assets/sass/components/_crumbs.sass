@@ -1,0 +1,47 @@
+$row-gap: 8px 
+$column-gap: 36
+$column-gap-mobile: 24
+
+.crumbs
+	display: flex
+	align-items: center
+	flex-wrap: wrap
+	+adap('column-gap', $column-gap, $column-gap-mobile)
+	row-gap: $row-gap
+	 
+	+adap('font-size', 16, 14)
+
+	&-wrapper
+		position: relative
+		z-index: 2
+		 
+		+adap('margin-top', 24, 20)
+		+adap('margin-bottom', -20, -12)	
+
+	li 
+		&:not(:last-child)
+			color: var(--gray_dark)
+
+			@media (any-hover: hover)
+				&:hover
+					color: var(--active)
+
+					&:before
+						color: var(--gray_dark)
+
+		&:last-child
+			pointer-events: none
+
+			a
+				cursor: default 
+
+		&:not(:last-child)
+			position: relative
+			
+			&:before
+				content: '/'
+
+				position: absolute
+				+adap('right', math.div($column-gap, -2), math.div($column-gap-mobile, -2))
+				top: 50%
+				translate: 50% -50%

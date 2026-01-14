@@ -1,0 +1,126 @@
+<footer class="footer">
+	<div class="footer__top-wrapper">
+		<div class="container">
+			<div class="footer__top">
+				<div class="col footer__left">
+					<a href="/digimap" class="logo footer__logo">
+						<img src="assets/img/logo.svg" width="40" height="40" alt="">
+						<div class="logo__title">
+							<p>Dental</p>
+							<p>City</p>
+						</div>
+					</a>
+					<div class="footer__text">
+						<p>ООО Dental City</p>
+						<p>
+							ОГРН: 00000000000000 <br>
+							ИНН: 0000000000 <br>
+							КПП: 0000000000
+						</p>
+					</div>
+				</div>
+				<div class="footer__item footer__item-menu">
+					<div class="title-3 footer__item-title">Меню</div>
+					<ul class="menu footer__menu">
+						<li class="menu-item-has-children current-menu-item">
+							<a href="about.html">
+								О нас
+								<span class="menu-item-arrow"></span>
+							</a>
+							<div class="sub-menu-wrapper">
+								<ul class="sub-menu">
+									<li><a href="license.html">Лицензии</a></li>
+									<li><a href="feedback.html">Отзывы</a></li>
+									<li><a href="vacancy.html">Вакансии</a></li>
+								</ul>
+							</div>
+						</li>
+						<li><a href="feedback.html">Отзывы</a></li>
+						<li class="menu-item-has-children">
+							<a href="category.html">
+								Продукты
+								<span class="menu-item-arrow"></span>
+							</a>
+							<div class="sub-menu-wrapper">
+								<ul class="sub-menu">
+									<li><a href="category-2.html">RuMap-GIS</a></li>
+									<li><a href="category-2.html">RuMap Сервисы</a></li>
+									<li><a href="category-2.html">Геопортал RuMap</a></li>
+									<li><a href="category-2.html">RuMap приложения</a></li>
+									<li><a href="category-2.html">Геоинформационные системы</a></li>
+								</ul>
+							</div>
+						</li>
+						<li><a href="news.html">Новости</a></li>
+						<li class="menu-item-has-children">
+							<a href="category-2.html">
+								Услуги
+								<span class="menu-item-arrow"></span>
+							</a>
+							<div class="sub-menu-wrapper">
+								<ul class="sub-menu">
+									<li><a href="category-2.html">Разработка Программного обеспечения</a></li>
+									<li><a href="category-2.html">Разработка пространственных данных</a></li>
+									<li><a href="category-2.html">Геомаркетинговые исследования</a></li>
+									<li><a href="category-2.html">Аналитические исследования</a></li>
+									<li><a href="category-2.html">Разработка Программного обеспечения</a></li>
+									<li><a href="category-2.html">Разработка пространственных данных</a></li>
+									<li><a href="category-2.html">Геомаркетинговые исследования</a></li>
+									<li><a href="category-2.html">Аналитические исследования</a></li>
+								</ul>
+							</div>
+						</li>
+						<li><a href="contact.html">Контакты</a></li>
+						<li><a href="project.html">Проекты</a></li>
+					</ul>
+				</div>
+				<div class="footer__item footer__item-contacts">
+					<div class="title-3 footer__item-title">Контакты и время работы</div>
+
+					<div class="footer__contacts">
+						@@include("call.html", {
+						"class" : '"call footer__call"'
+						})
+						<a href="mailto:info@admin.ru" class="hover-active email footer__email">
+							<div class="icon">
+								<svg class="email-icon">
+									<use xlink:href="assets/img/sprite.svg#email"></use>
+								</svg>
+							</div>
+							<span>info@admin.ru</span>
+						</a>
+						<div class="address">
+							<div class="icon">
+								<svg class="location-icon">
+									<use xlink:href="assets/img/sprite.svg#location"></use>
+								</svg>
+							</div>
+							<span>г. Москва, ул Петрова, дом 9а, офис 125</span>
+						</div>
+						<div class="time">
+							<div class="icon">
+								<svg class="time-icon">
+									<use xlink:href="assets/img/sprite.svg#time"></use>
+								</svg>
+							</div>
+							<span>Пн-Пт, с 9:00 до 18:00</span>
+						</div>
+						<div class="footer__buttons">
+							<button class="button button_border button_white" type="button" data-modal="popup-call">Связаться с нами</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="footer__bottom-wrapper">
+		<div class="container">
+			<div class="footer__bottom">
+				<span>Copyright ©2025 DentalTime</span>
+				<a href="sitemap.html" class="hover-active" target="_blank">Карта сайта</a>
+				<a href="text.html" class="hover-active" target="_blank">Политика конфиденциальности</a>
+				<a href="text.html" class="hover-active" target="_blank">Пользовательское соглашение</a>
+			</div>
+		</div>
+	</div>
+</footer>

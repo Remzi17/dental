@@ -1,0 +1,126 @@
+
+.slider 
+	position: relative
+
+	&:has(.hover-translate)
+		.swiper 
+			padding-block: 12px
+			margin-block: -12px
+	
+	&__navigation 
+		display: flex
+		align-items: center
+		gap: 8px
+
+	&__arrow 
+		display: flex
+		align-items: center
+		justify-content: center
+		+adap('width', 40, 28)
+		+adap('height', 40, 28)
+
+		box-shadow: 0px 4px 12px 0px rgba(0, 67, 139, 0.08)
+		background: #fff
+		border-radius: 8px
+		+t
+
+		svg 
+			max-width: 40%
+			max-height: 40%
+			fill: none
+			stroke: $text
+
+		+hov
+			background: $active
+			
+			svg 
+				stroke: #fff
+	
+.swiper
+	+t
+
+	&-pagination
+		display: flex
+		flex-wrap: wrap
+		justify-content: center
+		gap: 4px 12px
+		width: 100%
+
+		+adap('margin-top', 40, 20)
+
+		&-bullets-dynamic 
+			margin-inline: auto
+			display: block
+			
+		&-bullet
+			+adap('width', 36, 20)
+			+adap('height', 6, 4)
+			
+			border-radius: 2px
+			background: $gray
+			cursor: pointer
+			+t
+
+			&-active
+				background: var(--active)
+
+				&:last-child:first-child
+					display: none
+
+		&-lock 
+			display: none
+
+	&-button-lock 
+		display: none
+
+	&-wrapper  
+		display: grid
+		grid-auto-flow: column
+		justify-content: start
+
+	&-slide 
+		display: grid
+		grid-template-columns: 100%
+
+	&-scrollbar 
+		width: 100%
+		height: 4px
+		margin-top: 12px
+
+		background: $gray 
+		cursor: pointer
+		overflow: hidden 
+
+		&-drag
+			background: var(--active)
+
+html
+	&:not(.loaded)
+		.swiper
+			opacity: 0 
+ 
+
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

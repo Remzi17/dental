@@ -1,0 +1,404 @@
+
+
+.logo 
+	display: flex
+	align-items: center
+	+adap('gap', 16, 8)
+
+	+adap('font-size', 32, 24)
+	font-weight: 600
+
+	&__title
+		white-space: nowrap
+
+		p
+			display: contents
+
+			&:first-child
+				color: var(--active)
+
+	img 
+		width: 1em
+		height: 1em
+
+
+
+.buttons 
+	display: flex
+	align-items: center
+	gap: 8px 12px
+	flex-wrap: wrap
+
+	&>*
+		flex: 1 1 auto
+
+.button 
+	+adap('min-width', 180, 120)
+	+adap('min-height', 52, 44)
+	display: flex
+	align-items: center
+	justify-content: center
+	padding: em(12) em(20)
+	gap: 8px
+
+	background: var(--active)
+	+adap('border-radius', 16, 12)
+
+	color: #fff
+	white-space: nowrap
+
+	svg 
+		width: 1.2em
+		height: 1.2em
+
+		fill: currentColor
+
+		&.prev-icon,
+		&.next-icon
+			fill: none
+			stroke: currentColor
+
+	+hov
+		background: dark(var(--active), 12%)
+
+	&_border 
+		border: 1px solid var(--active)
+		background: transparent
+		color: var(--active)
+
+		+hov
+			background: var(--active)
+			color: #fff
+
+		&.button_white 
+			background: transparent
+			border-color: #fff
+			color: #fff
+
+			+hov
+				background: #fff
+				color: var(--text)
+
+	&_white 
+		background: #fff
+		color: var(--active)
+
+		+hov
+			background: var(--gray)
+
+	&_small
+		+adap('min-height', 40, 36)
+		min-width: 120px
+		padding: em(8) em(16)
+		
+		+adap('border-radius', 12, 8)
+
+		+adap('font-size', 14, 12)
+
+	&-more 
+		+adap('margin-top', 40, 20)
+
+
+
+		
+.parallax
+	position: absolute
+	z-index: 2
+
+	+adap('width', 140, 40)
+	+adap('height', 140, 40)
+
+	filter: blur(2px) opacity(.6)
+
+	@media (max-width: 767px)
+		display: none
+
+
+
+
+.tags 
+	display: flex
+	flex-wrap: wrap
+	+adap('gap', 8, 4)
+
+.tag
+	padding: em(8) em(16)
+
+	+adap('font-size', 14, 11)
+	border-radius: em(8, 16)
+	background: var(--gray)
+	+t
+
+	&:not(.tag_active)
+		+hov
+			background: color-mix(in srgb, var(--gray) 90%, black 10%)
+
+	&_active 
+		background: var(--active)
+		color: #fff
+
+
+
+
+.placeholder 
+	position: relative
+	z-index: 1
+
+	width: 100%
+	background: var(--gray)
+	aspect-ratio: 3/2
+
+	&:after
+		content: ''
+		+abs
+
+		background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIj8+PHN2ZyB2aWV3Qm94PSIwIDAgNTEyIDUxMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTUyIDEyMGMtMjYuNTEgMC00OCAyMS40OS00OCA0OHMyMS40OSA0OCA0OCA0OHM0OC0yMS40OSA0OC00OFMxNzguNSAxMjAgMTUyIDEyMHpNNDQ3LjEgMzJoLTM4NEMyOC42NSAzMi0uMDA5MSA2MC42NS0uMDA5MSA5NnYzMjBjMCAzNS4zNSAyOC42NSA2NCA2My4xIDY0aDM4NGMzNS4zNSAwIDY0LTI4LjY1IDY0LTY0Vjk2QzUxMS4xIDYwLjY1IDQ4My4zIDMyIDQ0Ny4xIDMyek00NjMuMSA0MDkuM2wtMTM2LjgtMTg1LjlDMzIzLjggMjE4LjggMzE4LjEgMjE2IDMxMiAyMTZjLTYuMTEzIDAtMTEuODIgMi43NjgtMTUuMjEgNy4zNzlsLTEwNi42IDE0NC4xbC0zNy4wOS00Ni4xYy0zLjQ0MS00LjI3OS04LjkzNC02LjgwOS0xNC43Ny02LjgwOWMtNS44NDIgMC0xMS4zMyAyLjUyOS0xNC43OCA2LjgwOWwtNzUuNTIgOTMuODFjMC0uMDI5MyAwIC4wMjkzIDAgMEw0Ny45OSA5NmMwLTguODIyIDcuMTc4LTE2IDE2LTE2aDM4NGM4LjgyMiAwIDE2IDcuMTc4IDE2IDE2VjQwOS4zeiIvPjwvc3ZnPg==) center / 50% no-repeat
+
+		opacity: .2
+
+
+
+
+
+.info-list 
+	display: grid
+	gap: 4px
+
+	&__item 
+		display: flex
+		align-items: center
+		justify-content: space-between
+		
+		&-text 
+			display: flex
+			align-items: center
+			gap: 4px
+
+			a 
+				color: var(--active)
+
+			svg 
+				width: 16px
+				height: 16px
+
+				fill: currentColor
+				transition: none
+			
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		
+
+
+
+
+
+
+
+
+
+
+
