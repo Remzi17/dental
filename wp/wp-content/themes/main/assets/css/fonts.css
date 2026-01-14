@@ -1,0 +1,96 @@
+
+@font-face {
+	font-family: "";
+	src: url(../fonts/.woff2);
+	font-weight: 400;
+	font-style: normal;
+	font-display: block;
+}  
+
+@font-face {
+	font-family: "SFNSDisplay";
+	src: url(../fonts/SFNSDisplay-Bold.woff2);
+	font-weight: 700;
+	font-style: normal;
+	font-display: block;
+}  
+
+@font-face {
+	font-family: "SFNSDisplay";
+	src: url(../fonts/SFNSDisplay-Regular.woff2);
+	font-weight: 400;
+	font-style: normal;
+	font-display: block;
+}  
+
+@font-face {
+	font-family: "SFProDisplay";
+	src: url(../fonts/SFProDisplay-Black.woff2);
+	font-weight: 900;
+	font-style: normal;
+	font-display: block;
+}  
+
+@font-face {
+	font-family: "SFProDisplay";
+	src: url(../fonts/SFProDisplay-Bold.woff2);
+	font-weight: 700;
+	font-style: normal;
+	font-display: block;
+}  
+
+@font-face {
+	font-family: "SFProDisplay";
+	src: url(../fonts/SFProDisplay-Heavy.woff2);
+	font-weight: 400;
+	font-style: normal;
+	font-display: block;
+}  
+
+@font-face {
+	font-family: "SFProDisplay";
+	src: url(../fonts/SFProDisplay-Light.woff2);
+	font-weight: 300;
+	font-style: normal;
+	font-display: block;
+}  
+
+@font-face {
+	font-family: "SFProDisplay";
+	src: url(../fonts/SFProDisplay-Medium.woff2);
+	font-weight: 500;
+	font-style: normal;
+	font-display: block;
+}  
+
+@font-face {
+	font-family: "SFProDisplay";
+	src: url(../fonts/SFProDisplay-Regular.woff2);
+	font-weight: 400;
+	font-style: normal;
+	font-display: block;
+}  
+
+@font-face {
+	font-family: "SFProDisplay";
+	src: url(../fonts/SFProDisplay-SemiBold.woff2);
+	font-weight: 600;
+	font-style: normal;
+	font-display: block;
+}  
+
+@font-face {
+	font-family: "SFProDisplay";
+	src: url(../fonts/SFProDisplay-Thin.woff2);
+	font-weight: 100;
+	font-style: normal;
+	font-display: block;
+}  
+
+@font-face {
+	font-family: "lg";
+	src: url(../fonts/lg.woff2);
+	font-weight: 400;
+	font-style: normal;
+	font-display: block;
+}  

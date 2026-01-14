@@ -1,0 +1,61 @@
+.admin-bar .header {
+	top: 32px;
+}
+
+@media (max-width: 782px) {
+	.admin-bar .header {
+		top: 46px;
+	}
+}
+
+@media (max-width: 991px) {
+	.admin-bar .header {
+		top: 46px;
+	}
+}
+
+@media (max-width: 600px) {
+	#wpadminbar {
+		position: fixed;
+	}
+}
+
+.checkbox-366 .wpcf7-not-valid {
+	color: #c00;
+}
+
+.input-wrapper br,
+.wpcf7-spinner,
+div.wpcf7-validation-errors,
+div.wpcf7-acceptance-missing,
+div.wpcf7 .ajax-loader,
+form .wpcf7-response-output,
+form .wpcf7-not-valid-tip,
+form div.wpcf7-mail-sent-ok {
+	display: none !important;
+}
+
+form .wpcf7-not-valid:not(.wpcf7-checkbox) {
+	background: #BF1A20;
+	color: #fff;
+	border-color: #BF1A20
+}
+
+span.wpcf7-list-item {
+	margin: 0;
+}
+
+img.aligncenter {
+	margin: 0 auto;
+}
+
+img.alignleft {
+	float: left;
+	margin: 16px 16px 16px 0;
+}
+
+img.alignright {
+	float: right;
+	margin-left: auto;
+	margin: 16px 0 16px 16px;
+}
