@@ -333,7 +333,10 @@
 			const dateEl = el.querySelector('[data-date]')
 			if(dateEl) dateEl.textContent = date
 
-			const commentData = window.commentsData.find(c => c.id === id)
+			const commentData = Array.isArray(window.commentsData)
+			? window.commentsData.find(c => c.id === id)
+			: null
+			const isDeleted = commentData?.is_deleted === true
 
 			const is_own_like = commentData ? commentData.is_own_like : false
 			const is_own_dislike = commentData ? commentData.is_own_dislike : false
@@ -364,11 +367,13 @@
 				// проверка прав: свой комментарий или админ/редактор
 				const isOwnComment = can_delete  // твоя текущая логика для "свой"
 				const isEditorOrHigher = window.currentUser && ['administrator', 'editor'].includes(window.currentUser.role)
+				const isDeleted = commentData && commentData.is_deleted === true
 
-				if (!isOwnComment && !isEditorOrHigher) {
+				if ((!isOwnComment && !isEditorOrHigher) || isDeleted) {
 					deleteBtn.remove()
 					console.log(`🔹 Удаляем кнопку удаления для id: ${id} (нет прав)`)
 				} else {
+					
 					console.log(`🔹 Кнопка удаления доступна для id: ${id}`)
 				}
 			}

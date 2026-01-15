@@ -81,7 +81,7 @@
 					$avatar = get_avatar_url($c->comment_author_email, ['size' => 64]);
 				}
 
-				$is_deleted = ($c->comment_approved === 'trash');
+				$is_deleted = (wp_get_comment_status($c) === 'trash');
 
 				$reactions = get_comment_reactions_cookie(); // массив всех реакций текущего пользователя
 				$is_own_like = !empty($reactions[$c->comment_ID]['like']);
@@ -145,8 +145,5 @@
 				role: <?=json_encode(is_user_logged_in() ? wp_get_current_user()->roles[0] : '')?>
 			}
 		</script>
-
-
-
 	</div>
 </section>
