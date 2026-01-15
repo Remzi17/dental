@@ -69,7 +69,6 @@
 			window.commentsData = <?= json_encode(array_map(function($c) {
 
 				$user_id = get_current_user_id();
-				$is_own = is_user_logged_in() && $user_id === (int)$c->user_id;
 				$avatar = '';
 
 				if ((int)$c->user_id) {
@@ -83,7 +82,7 @@
 
 				$is_deleted = (wp_get_comment_status($c) === 'trash');
 
-				$reactions = get_comment_reactions_cookie(); // массив всех реакций текущего пользователя
+				$reactions = get_comment_reactions_cookie();
 				$is_own_like = !empty($reactions[$c->comment_ID]['like']);
 				$is_own_dislike = !empty($reactions[$c->comment_ID]['dislike']);
 
@@ -108,14 +107,14 @@
 
 				$post_id = get_the_ID();
 
-				// 1️⃣ Все одобренные комментарии
+				// Все одобренные комментарии
 				$approved = get_comments([
 					'post_id' => $post_id,
 					'status'  => 'approve',
 					'order'   => 'ASC',
 				]);
 
-				// 2️⃣ Удалённые комментарии, у которых есть ответы
+				// Удалённые комментарии, у которых есть ответы
 				$trashed_with_replies = get_comments([
 					'post_id' => $post_id,
 					'status'  => 'trash',
@@ -133,7 +132,6 @@
 					return !empty($children);
 				});
 
-				// 3️⃣ объединяем
 				return array_merge($approved, $trashed_with_replies);
 
 			})())) ?>;

@@ -289,121 +289,143 @@
   
 <script>
 	document.addEventListener('DOMContentLoaded', () => {
-		const notify = (title='', text='', type='info', autohide = true, interval = 2500) => {
-			console.log(`🔹 Уведомление: ${title} ${text} [${type}]`) // 🔹 ЛОГ
-			new Notify({ title, text, theme:type, autohide, interval })
+
+		//
+		//
+		//
+		//
+		// Общие настройки и данные
+
+		const ajaxUrl = '<?=admin_url("admin-ajax.php")?>'
+
+		const notify = (title = '', text = '', type = 'info', autohide = true, interval = 2500) => {
+			new Notify({ title, text, theme: type, autohide, interval })
 		}
 
-		const escapeHTML = s => {
-			if (!s && s !== 0) return ''
-			return String(s)
-				.replace(/&/g,'&amp;')
-				.replace(/</g,'&lt;')
-				.replace(/>/g,'&gt;')
-				.replace(/"/g,'&quot;')
-				.replace(/'/g,'&#039;') 
+		const escapeHTML = value => {
+			if (!value && value !== 0) return ''
+			return String(value)
+				.replace(/&/g, '&amp;')
+				.replace(/</g, '&lt;')
+				.replace(/>/g, '&gt;')
+				.replace(/"/g, '&quot;')
+				.replace(/'/g, '&#039;')
 		}
 
 		const currentUser = {
 			id: <?=get_current_user_id()?>,
 			name: <?=json_encode(is_user_logged_in() ? wp_get_current_user()->display_name : '')?>,
-			email: <?=json_encode(is_user_logged_in() ? wp_get_current_user()->user_email : '')?>
+			email: <?=json_encode(is_user_logged_in() ? wp_get_current_user()->user_email : '')?>,
+			role: <?=json_encode(is_user_logged_in() ? wp_get_current_user()->roles[0] ?? '' : '')?>
 		}
 
 		const guestData = JSON.parse(localStorage.getItem('comment_guest') || '{}')
-		console.log('🔹 Данные гостя из localStorage:', guestData) // 🔹 ЛОГ
 
 
-		console.log('🔹 Текущий пользователь:', currentUser) // 🔹 ЛОГ
+		//
+		//
+		//
+		//
+		// Обновление счётчиков
 
-		function createCommentElement({ id, author, text, avatar, date = 'только что', likes = 0, dislikes = 0, can_delete = true, show_reply = true }) {
+		const updateCommentsUI = () => {
+			const wrapper = document.querySelector('.comments__wrapper')
+			const counter = document.querySelector('.title-2 .gray-text')
 
-			console.log(`🔹 Создаем элемент комментария id: ${id}, автор: ${author}, can_delete: ${can_delete}, show_reply: ${show_reply}`) // 🔹 ЛОГ
-			const tpl = document.querySelector('#comment-template')
-			if (!tpl) return null
+			if (counter) {
+				counter.textContent = ' ' + (wrapper?.querySelectorAll('.comment').length || 0)
+			}
+		}
 
-			const el = tpl.content.firstElementChild.cloneNode(true)
-    
-			el.id = `comment-${id}`
-			el.querySelector('[data-author]').textContent = author
-			el.querySelector('[data-text]').innerHTML = `<p>${text}</p>`
-    
-			const avatarEl = el.querySelector('[data-avatar]')
-			if(avatarEl) avatarEl.src = avatar
-			const dateEl = el.querySelector('[data-date]')
-			if(dateEl) dateEl.textContent = date
+
+		//
+		//
+		//
+		//
+		// Создание DOM комментария
+
+		const createCommentElement = ({
+			id,
+			author,
+			text,
+			avatar,
+			date = 'только что',
+			likes = 0,
+			dislikes = 0,
+			can_delete = true,
+			show_reply = true
+		}) => {
+			const template = document.querySelector('#comment-template')
+			if (!template) return null
+
+			const element = template.content.firstElementChild.cloneNode(true)
+			element.id = `comment-${id}`
+
+			element.querySelector('[data-author]').textContent = author
+			element.querySelector('[data-text]').innerHTML = `<p>${text}</p>`
+
+			const avatarEl = element.querySelector('[data-avatar]')
+			if (avatarEl) avatarEl.src = avatar
+
+			const dateEl = element.querySelector('[data-date]')
+			if (dateEl) dateEl.textContent = date
 
 			const commentData = Array.isArray(window.commentsData)
-			? window.commentsData.find(c => c.id === id)
-			: null
+				? window.commentsData.find(c => c.id === id)
+				: null
+
 			const isDeleted = commentData?.is_deleted === true
 
-			const is_own_like = commentData ? commentData.is_own_like : false
-			const is_own_dislike = commentData ? commentData.is_own_dislike : false
-			const likeBtn = el.querySelector('[data-like]')
-			const dislikeBtn = el.querySelector('[data-dislike]')
-			const deleteBtn = el.querySelector('[data-delete]')
-			const replyBtn = el.querySelector('[data-reply]')
+			const likeBtn = element.querySelector('[data-like]')
+			const dislikeBtn = element.querySelector('[data-dislike]')
+			const deleteBtn = element.querySelector('[data-delete]')
+			const replyBtn = element.querySelector('[data-reply]')
 
-			if (likeBtn) { 
+			if (likeBtn) {
 				likeBtn.dataset.commentId = id
 				likeBtn.querySelector('span').textContent = likes
-				// Ставим active только если текущий пользователь поставил лайк
-				if (is_own_like) likeBtn.classList.add('active')
-				else likeBtn.classList.remove('active')
+				likeBtn.classList.toggle('active', commentData?.is_own_like === true)
 			}
 
-			if (dislikeBtn) { 
+			if (dislikeBtn) {
 				dislikeBtn.dataset.commentId = id
 				dislikeBtn.querySelector('span').textContent = dislikes
-				// Ставим active только если текущий пользователь поставил дизлайк
-				if (is_own_dislike) dislikeBtn.classList.add('active')
-				else dislikeBtn.classList.remove('active')
+				dislikeBtn.classList.toggle('active', commentData?.is_own_dislike === true)
 			}
 
 			if (deleteBtn) {
 				deleteBtn.dataset.commentId = id
 
-				// проверка прав: свой комментарий или админ/редактор
-				const isOwnComment = can_delete  // твоя текущая логика для "свой"
-				const isEditorOrHigher = window.currentUser && ['administrator', 'editor'].includes(window.currentUser.role)
-				const isDeleted = commentData && commentData.is_deleted === true
+				const isEditorOrHigher = ['administrator', 'editor'].includes(currentUser.role)
 
-				if ((!isOwnComment && !isEditorOrHigher) || isDeleted) {
+				if ((!can_delete && !isEditorOrHigher) || isDeleted) {
 					deleteBtn.remove()
-					console.log(`🔹 Удаляем кнопку удаления для id: ${id} (нет прав)`)
-				} else {
-					
-					console.log(`🔹 Кнопка удаления доступна для id: ${id}`)
 				}
 			}
 
-			if (replyBtn && (!show_reply || can_delete === false && author === '')) {
+			if (replyBtn && (!show_reply || (can_delete === false && author === ''))) {
 				replyBtn.remove()
-				console.log(`🔹 Reply убран для id:${id}`)
 			}
 
-			return el
+			return element
 		}
 
 
-		const updateCommentsUI = () => {
-			const wrapper = document.querySelector('.comments__wrapper')
-			const countEl = document.querySelector('.title-2 .gray-text')
-			if (countEl){
-				countEl.textContent = ' ' + (wrapper?.querySelectorAll('.comment').length || 0)
-				console.log(`🔹 Обновлено количество комментариев: ${countEl.textContent.trim()}`) // 🔹 ЛОГ
-			}
-		}
- 
+		//
+		//
+		//
+		//
+		// Инициализация формы комментариев
+
 		const initForm = form => {
 			if (!form || form.dataset.formInitialized) return
 			form.dataset.formInitialized = '1'
 
 			const authorInput = form.querySelector('[name="author"]')
 			const emailInput = form.querySelector('[name="email"]')
+			const submitButton = form.querySelector('button[type="submit"]')
 
-			if(currentUser.id) {
+			if (currentUser.id) {
 				if (authorInput) authorInput.value = currentUser.name
 				if (emailInput) emailInput.value = currentUser.email
 			} else {
@@ -411,159 +433,134 @@
 				if (emailInput && guestData.email) emailInput.value = guestData.email
 			}
 
-			const btn = form.querySelector('button[type="submit"]')
-			if (!btn) return
-
-			form.addEventListener('keydown', event => {
-				if (
-					event.key === 'Enter' &&
-					(event.ctrlKey || event.metaKey)
-				) {
-					event.preventDefault()
-
-					if (form.checkValidity()) {
-						form.requestSubmit()
-					}
+			form.addEventListener('keydown', e => {
+				if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+					e.preventDefault()
+					if (form.checkValidity()) form.requestSubmit()
 				}
 			})
 
 			form.addEventListener('submit', async e => {
 				e.preventDefault()
-				btn.disabled = true
-				const originalBtnText = btn.textContent
-				btn.textContent = 'Отправка...'
+
+				if (!submitButton) return
+
+				submitButton.disabled = true
+				const originalText = submitButton.textContent
+				submitButton.textContent = 'Отправка...'
 
 				try {
 					const formData = new FormData(form)
 					formData.append('action', 'add_comment')
 
-					console.log('🔹 Отправка комментария на сервер:', Object.fromEntries(formData.entries())) // 🔹 ЛОГ
-
-					const res = await fetch('<?=admin_url("admin-ajax.php")?>', {
+					const response = await fetch(ajaxUrl, {
 						method: 'POST',
 						credentials: 'same-origin',
 						body: formData
 					})
 
-					if (!res.ok) throw new Error('Bad response')
+					const data = await response.json().catch(() => null)
 
-					const data = await res.json().catch(() => null)
-					console.log('🔹 Ответ от сервера:', data) // 🔹 ЛОГ
-
-					const authorName = authorInput.value
-					const parentId = form.querySelector('[name="comment_parent"]')?.value || 0
 					const wrapper = document.querySelector('.comments__wrapper')
-					const commentText = form.querySelector('[name="comment"]');
-  
-					// Добавляем комментарий в DOM только если он одобрен
+					const parentId = form.querySelector('[name="comment_parent"]')?.value || 0
+					const commentText = form.querySelector('[name="comment"]')?.value || ''
+
 					if (data?.data?.approved) {
-						console.log('🔹 Создаем DOM элемент для комментария id:' + data.data.comment_id, 'isOwnComment:true')
+						const isEditorOrHigher = ['administrator', 'editor'].includes(currentUser.role)
 
-						const isEditorOrHigher = window.currentUser && ['administrator', 'editor'].includes(window.currentUser.role)
-
-						const newCommentEl = createCommentElement({
+						const newComment = createCommentElement({
 							id: data.data.comment_id,
-							author: authorName,
-							text: commentText?.value || '',
-							avatar: currentUser.id 
-								? `<?=get_field('аватар', 'user_' . get_current_user_id())['sizes']['thumbnail']?>`
+							author: authorInput?.value || '',
+							text: commentText,
+							avatar: currentUser.id
+								? '<?=get_field('аватар', 'user_' . get_current_user_id())['sizes']['thumbnail']?>'
 								: '<?=get_avatar_url("", ["size"=>64])?>',
-							likes: 0,
-							dislikes: 0,
 							can_delete: true,
-							show_reply: isEditorOrHigher, 
-							parentId
+							show_reply: isEditorOrHigher
 						})
 
-						newCommentEl.classList.add('bounceOutTop')
+						newComment.classList.add('bounceOutTop')
 
-						if (parentId && parentId != '0') {
+						if (parentId && parentId !== '0') {
 							const parent = document.querySelector(`#comment-${parentId}`)
-
-							if (parent){
-								parent.querySelector('.comment__content').appendChild(newCommentEl)
-							} else {
-								wrapper.prepend(newCommentEl)
-							}
+							parent?.querySelector('.comment__content')?.appendChild(newComment)
 						} else {
-							wrapper.prepend(newCommentEl)
+							wrapper?.prepend(newComment)
 						}
 
 						setTimeout(() => {
-							newCommentEl.classList.remove('bounceOutTop')
-						}, 500);
+							newComment.classList.remove('bounceOutTop')
+						}, 500)
 					}
 
-					form.reset();
-
 					if (!currentUser.id) {
-						const newGuest = {
-							name: authorName,
+						const guest = {
+							name: authorInput?.value || '',
 							email: formData.get('email') || ''
 						}
 
-						localStorage.setItem('comment_guest', JSON.stringify(newGuest))
+						localStorage.setItem('comment_guest', JSON.stringify(guest))
 
-						const authorField = form.querySelector('[name="author"]')
-						const emailField = form.querySelector('[name="email"]')
-
-						if (authorField) authorField.value = newGuest.name
-						if (emailField) emailField.value = newGuest.email
+						if (authorInput) authorInput.value = guest.name
+						if (emailInput) emailInput.value = guest.email
 					}
+
+					form.reset()
 
 					initReply()
 					updateCommentsUI()
-					notify(data?.data?.approved ? 'Комментарий добавлен' : 'Отправлено на модерацию', '', 'success')
 
-				} catch (err) {
-					console.error('🔹 Ошибка отправки комментария:', err) // 🔹 ЛОГ
+					notify(
+						data?.data?.approved ? 'Комментарий добавлен' : 'Отправлено на модерацию',
+						'',
+						'success'
+					)
+
+				} catch {
 					notify('Ошибка сети', '', 'danger')
 				} finally {
-					btn.disabled = false
-					btn.textContent = originalBtnText;
-					document.querySelectorAll('.comment-add').forEach(commentForm => {
-						if (!commentForm.closest('.comments__top')) {
-							commentForm.remove()
+					submitButton.disabled = false
+					submitButton.textContent = originalText
+
+					document.querySelectorAll('.comment-add').forEach(formEl => {
+						if (!formEl.closest('.comments__top')) {
+							formEl.remove()
 						}
-						
 					})
 				}
 			})
-		}
+		} 
 
 		document.querySelectorAll('.comment-add').forEach(initForm)
 
-		// ===============================
-		// Ответ на комментарий
-		// ===============================
+
+		//
+		// 
+		//
+		//
+		// Ответы на комментарии
+
 		const initReply = () => {
-			document.querySelectorAll('.comment__reply').forEach(btn => {
-				if(btn.dataset.replyInitialized) return
-				btn.dataset.replyInitialized = '1'
+			document.querySelectorAll('.comment__reply').forEach(button => {
+				if (button.dataset.replyInitialized) return
+				button.dataset.replyInitialized = '1'
 
-				btn.addEventListener('click', e => {
-					const comment = btn.closest('.comment')
-					if(!comment) return
-					console.log(`🔹 Нажата кнопка Ответить на комментарий id:${comment.id}`)
+				button.addEventListener('click', () => {
+					const comment = button.closest('.comment')
+					if (!comment) return
 
-					// Если уже есть форма под этим комментом — удаляем и выходим
 					const existingForm = comment.querySelector('.comment-add')
 					if (existingForm) {
 						existingForm.remove()
 						return
 					}
 
-					// Удаляем все другие формы кроме основной
 					document.querySelectorAll('.comment-add').forEach(form => {
-						if(form.dataset.formInitialized === '1' && form !== document.querySelector('.comment-add[data-main]') && !form.closest('.comments__top')) {
-							form.remove()
-						}
+						if (!form.closest('.comments__top')) form.remove()
 					})
 
-					const commentId = comment.id.replace('comment-','')
+					const commentId = comment.id.replace('comment-', '')
 					const postId = document.querySelector('#comment_post_ID')?.value || ''
-					const hasAuthor = localStorage.getItem('comment_guest')
-					const showFields = !currentUser.id && !hasAuthor
 
 					const html = `
 						<form class="form comment-add">
@@ -579,39 +576,42 @@
 							</div>
 						</form>
 					`
-					comment.querySelector('.comment__meta').insertAdjacentHTML('afterend', html)
-					initForm(comment.querySelector('form.comment-add'))
-					comment.querySelector('form.comment-add textarea')?.focus()
+
+					comment.querySelector('.comment__meta')?.insertAdjacentHTML('afterend', html)
+
+					const newForm = comment.querySelector('form.comment-add')
+					initForm(newForm)
+					newForm?.querySelector('textarea')?.focus()
 				})
 			})
 		}
 
 		initReply()
 
-		// ===============================
+		//
+		//
+		//
+		//
 		// Рендер комментариев с сервера
-		// ===============================
+
 		if (Array.isArray(window.commentsData) && window.commentsData.length) {
 			const wrapper = document.querySelector('.comments__wrapper')
 			wrapper.innerHTML = ''
 
 			const commentsMap = new Map()
 
-			// 1️⃣ Создаем все элементы и складываем в Map
 			window.commentsData.forEach(comment => {
 				const isOwnComment = comment.is_own ||
-				(
-					currentUser.id === 0 &&
-					guestData.email &&
-					comment.email &&
-					guestData.email === comment.email
-				)
-
-				console.log('🔹 Рендер комментария с сервера', 'id:' + comment.id, 'is_own:' + isOwnComment)
+					(
+						currentUser.id === 0 &&
+						guestData.email &&
+						comment.email &&
+						guestData.email === comment.email
+					)
 
 				const isDeleted = comment.is_deleted
 
-				const el = createCommentElement({
+				const element = createCommentElement({
 					id: comment.id,
 					author: comment.author,
 					text: comment.text.replace(/<br\s*\/?>/gi, '\n'),
@@ -623,31 +623,23 @@
 					show_reply: !isOwnComment && !isDeleted
 				})
 
+				if (!element) return
+
 				if (isDeleted) {
-					console.log('🔹 Рендер удалённого комментария id:', comment.id)
-
-					el.classList.add('comment_deleted')
-
-					el.querySelectorAll('.comment__like, .comment__dislike').forEach(b => {
-						b.classList.add('disabled')
-						b.addEventListener('click', e => {
+					element.classList.add('comment_deleted')
+					element.querySelectorAll('.comment__like, .comment__dislike').forEach(btn => {
+						btn.classList.add('disabled')
+						btn.addEventListener('click', e => {
 							e.preventDefault()
 							e.stopImmediatePropagation()
-							console.log('🔹 Клик по реакции заблокирован (рендер)')
 						})
 					})
 				}
 
-
-				if (!el) return 
-
-				commentsMap.set(comment.id, {
-					data: comment,
-					el
-				})
+				commentsMap.set(comment.id, { data: comment, el: element })
 			})
 
-			// 2️⃣ Раскладываем по родителям
+			// Раскладываем по родителям
 			commentsMap.forEach(({ data, el }) => {
 				if (data.parent && commentsMap.has(data.parent)) {
 					const parentEl = commentsMap.get(data.parent).el
@@ -661,72 +653,53 @@
 			updateCommentsUI()
 		}
 
-		
-		// ===============================
-		// Лайки / дизлайки
-		// ===============================
-		const handleReaction = async (btn, type, action) => {
 
-			console.log('🔹 window.commentsData', window.commentsData);
+		//
+		//
+		//
+		//
+		// Лайки и дизлайки
 
-			if (!btn) return
-			const container = btn.closest('.gray-text')
+		const handleReaction = async (button, type, action) => {
+			if (!button) return
+
+			const container = button.closest('.gray-text')
 			if (!container) return
 
 			const likeBtn = container.querySelector('.comment__like')
 			const dislikeBtn = container.querySelector('.comment__dislike')
-			const likeCountEl = likeBtn.querySelector('span')
-			const dislikeCountEl = dislikeBtn.querySelector('span')
 
-			const likeActive = likeBtn.classList.contains('active')
-			const dislikeActive = dislikeBtn.classList.contains('active')
-
-			btn.disabled = true
+			button.disabled = true
 
 			try {
 				const formData = new FormData()
 				formData.append('action', `${action}_${type}`)
 				formData.append('nonce', '<?=wp_create_nonce("like_nonce")?>')
+				formData.append('comment_id', button.dataset.commentId)
 
-				if (type==='comment') {
-					formData.append('comment_id', btn.dataset.commentId)
-				}
-
-				const result = await fetch('<?=admin_url("admin-ajax.php")?>', { 
-					method: 'POST', 
-					body: formData 
-				})
-
-				const data = await result.json().catch(() => null)
-				console.log('🔹 Ответ сервера для лайка/дизлайка:', data)
+				const response = await fetch(ajaxUrl, { method: 'POST', body: formData })
+				const data = await response.json().catch(() => null)
 
 				if (!data?.success) return
 
-				// Обновляем счётчики по данным сервера
-				if (data.data.likes !== undefined) likeCountEl.textContent = data.data.likes
-				if (data.data.dislikes !== undefined) dislikeCountEl.textContent = data.data.dislikes
-
-				// Обновляем активный класс только для текущего пользователя
-				if (action === 'like') {
-					if (data.data.active) {
-						likeBtn.classList.add('active')
-						dislikeBtn.classList.remove('active')
-					} else {
-						likeBtn.classList.remove('active')
-					}
-				} else {
-					if (data.data.active) {
-						dislikeBtn.classList.add('active')
-						likeBtn.classList.remove('active')
-					} else {
-						dislikeBtn.classList.remove('active')
-					}
+				if (data.data.likes !== undefined) {
+					likeBtn.querySelector('span').textContent = data.data.likes
 				}
 
-			} catch(e) { 
-				console.log('Ошибка лайка', e) 
-			} finally { 
-				btn.disabled = false 
+				if (data.data.dislikes !== undefined) {
+					dislikeBtn.querySelector('span').textContent = data.data.dislikes
+				}
+
+				if (action === 'like') {
+					likeBtn.classList.toggle('active', data.data.active)
+					dislikeBtn.classList.remove('active')
+				} else {
+					dislikeBtn.classList.toggle('active', data.data.active)
+					likeBtn.classList.remove('active')
+				}
+
+			} finally {
+				button.disabled = false
 			}
 		}
 
@@ -734,123 +707,98 @@
 			const btn = e.target.closest('.comment__like, .comment__dislike')
 			if (!btn) return
 			e.preventDefault()
-			handleReaction(btn, 'comment', btn.classList.contains('comment__like') ? 'like' : 'dislike')
+
+			handleReaction(
+				btn,
+				'comment',
+				btn.classList.contains('comment__like') ? 'like' : 'dislike'
+			)
 		})
 
-		// ===============================
-		// Удаление комментариев
-		// ===============================
-		const deleteComment = async btn => {
-			const el = btn.closest('.comment')
-			if (!el || el.classList.contains('is-deleting')) return
 
-			btn.disabled = true
-			el.classList.add('is-deleting')
+		//
+		//
+		//
+		//
+		// Удаление комментариев
+
+		const deleteComment = async button => {
+			const comment = button.closest('.comment')
+			if (!comment || comment.classList.contains('is-deleting')) return
+
+			button.disabled = true
+			comment.classList.add('is-deleting')
 
 			try {
 				const formData = new FormData()
 				formData.append('action', 'delete_comment')
-				formData.append('comment_id', btn.dataset.commentId)
+				formData.append('comment_id', button.dataset.commentId)
 				formData.append('guest_email', guestData.email || '')
 				formData.append('nonce', '<?=wp_create_nonce("delete_comment")?>')
 
-				const res = await fetch('<?=admin_url("admin-ajax.php")?>', {
-					method: 'POST',
-					body: formData
-				})
+				const response = await fetch(ajaxUrl, { method: 'POST', body: formData })
+				const data = await response.json().catch(() => null)
 
-				const data = await res.json().catch(() => null)
-
-				if (data?.success) {
-					console.log('🔹 Успешное удаление, action:', data.data.action)
-
-					el.querySelector('.comment__delete')?.remove()
-
-					if (data.data.action === 'deleted') {
-						console.log('🔹 Удаление комментария из DOM, id:', btn.dataset.commentId)
-
-						el.classList.add('bounceOutLeft')
-
-						notify('Комментарий удален', '', 'info')
-
-						setTimeout(() => {
-							const parentComment = el.closest('.comment')?.parentElement?.closest('.comment')
-
-							el.remove()
-							updateCommentsUI()
-
-							// 🔥 ВОТ СЮДА
-							if (parentComment && parentComment.classList.contains('comment_deleted')) {
-								const replies = parentComment.querySelectorAll(':scope > .comment__content > .comment').length
-
-								console.log(
-									'🔹 Проверка родителя после удаления дочернего',
-									'parentId:', parentComment.id,
-									'repliesLeft:', replies
-								)
-
-								if (replies === 0) {
-									console.log('🔹 Родитель без ответов — удаляем полностью')
-									parentComment.classList.add('bounceOutLeft')
-
-									setTimeout(() => {
-										parentComment.remove()
-										updateCommentsUI()
-									}, 200);
-								}
-							}
- 
-						}, 600)
-					}
-
-					if (data.data.action === 'hidden') {
-						console.log('🔹 Комментарий скрыт (есть ответы), id:', btn.dataset.commentId)
-
-						const textEl = el.querySelector('.comment__text')
-						const metaEl = el.querySelector('.comment__meta')
-
-						if (textEl) {
-							textEl.innerHTML = '<em class="gray-text">Комментарий удален</em>'
-							console.log('🔹 Текст заменён на "Комментарий удален"')
-						}
-
-						// убираем лайки / дизлайки
-						metaEl?.querySelectorAll('.comment__like, .comment__dislike').forEach(b => {
-							b.classList.add('disabled')
-							b.addEventListener('click', e => {
-								e.preventDefault()
-								e.stopImmediatePropagation()
-								console.log('🔹 Клик по реакции заблокирован (удалённый комментарий)')
-							})
-						})
-
-						// убираем "Ответить"
-						metaEl?.querySelector('[data-reply]')?.remove()
-						console.log('🔹 Кнопка "Ответить" удалена')
-
-						el.classList.add('comment_deleted')
-						updateCommentsUI()
-					}
-				} else {
+				if (!data?.success) {
 					notify('Не удалось удалить комментарий', '', 'danger', false)
+					return
 				}
 
-			} catch (e) {
-				console.error('🔹 Ошибка удаления комментария:', e)
+				comment.querySelector('.comment__delete')?.remove()
+
+				if (data.data.action === 'deleted') {
+					comment.classList.add('bounceOutLeft')
+					notify('Комментарий удален', '', 'info')
+
+					setTimeout(() => {
+						const parent = comment.closest('.comment')?.parentElement?.closest('.comment')
+						comment.remove()
+						updateCommentsUI()
+
+						if (parent?.classList.contains('comment_deleted')) {
+							const repliesLeft = parent.querySelectorAll(':scope > .comment__content > .comment').length
+							if (!repliesLeft) {
+								parent.classList.add('bounceOutLeft')
+								setTimeout(() => {
+									parent.remove()
+									updateCommentsUI()
+								}, 200)
+							}
+						}
+					}, 600)
+				}
+
+				if (data.data.action === 'hidden') {
+					comment.querySelector('.comment__text').innerHTML =
+						'<em class="gray-text">Комментарий удален</em>'
+
+					comment.querySelectorAll('.comment__like, .comment__dislike').forEach(b => {
+						b.classList.add('disabled')
+						b.addEventListener('click', e => {
+							e.preventDefault()
+							e.stopImmediatePropagation()
+						})
+					})
+
+					comment.querySelector('[data-reply]')?.remove()
+					comment.classList.add('comment_deleted')
+
+					updateCommentsUI()
+				}
+
+			} catch {
 				notify('Ошибка удаления', '', 'danger', false)
 			} finally {
-				btn.disabled = false
-				el.classList.remove('is-deleting')
+				button.disabled = false
+				comment.classList.remove('is-deleting')
 			}
 		}
-		
-		document.addEventListener('click', e => {
-			const commentDeleteButton = e.target.closest('.comment__delete')
 
-			if (commentDeleteButton) {
-				deleteComment(commentDeleteButton)
-			}
+		document.addEventListener('click', e => {
+			const btn = e.target.closest('.comment__delete')
+			if (btn) deleteComment(btn)
 		})
+
 	})
 </script>
       
