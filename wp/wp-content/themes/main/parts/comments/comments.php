@@ -81,27 +81,72 @@
 					$avatar = get_avatar_url($c->comment_author_email, ['size' => 64]);
 				}
 
+				$is_deleted = ($c->comment_approved === 'trash');
+
+				$reactions = get_comment_reactions_cookie(); // массив всех реакций текущего пользователя
+				$is_own_like = !empty($reactions[$c->comment_ID]['like']);
+				$is_own_dislike = !empty($reactions[$c->comment_ID]['dislike']);
+
 				return [
 					'id' => (int)$c->comment_ID,
-					'author' => $c->comment_author ?: 'Гость',
+					'author' => $is_deleted ? '' : ($c->comment_author ?: 'Гость'),
 					'author_id' => (int)$c->user_id,
 					'email' => $c->comment_author_email,
 					'avatar' => $avatar,
-					'text' => $c->comment_content,
+					'text' => $is_deleted ? 'Комментарий удален' : $c->comment_content,
 					'date' => get_smart_date($c->comment_date),
 					'parent' => (int)$c->comment_parent,
 					'likes' => get_comment_likes_count($c->comment_ID),
 					'dislikes' => get_comment_dislikes_count($c->comment_ID),
-					'is_own' => $is_own,
+					'is_own_like' => $is_own_like,
+					'is_own_dislike' => $is_own_dislike,
+					'is_deleted' => $is_deleted,
 					'can_delete' => can_delete_comment($c),
 				];
 
-			}, get_comments([
-				'post_id' => get_the_ID(),
-				'status' => 'approve',
-				'order' => 'ASC'
-			]))) ?>;
+			}, (function() {
+
+				$post_id = get_the_ID();
+
+				// 1️⃣ Все одобренные комментарии
+				$approved = get_comments([
+					'post_id' => $post_id,
+					'status'  => 'approve',
+					'order'   => 'ASC',
+				]);
+
+				// 2️⃣ Удалённые комментарии, у которых есть ответы
+				$trashed_with_replies = get_comments([
+					'post_id' => $post_id,
+					'status'  => 'trash',
+					'order'   => 'ASC',
+				]);
+
+				$trashed_with_replies = array_filter($trashed_with_replies, function($comment) {
+
+					$children = get_comments([
+						'parent' => $comment->comment_ID,
+						'status' => 'approve',
+						'number' => 1,
+					]);
+
+					return !empty($children);
+				});
+
+				// 3️⃣ объединяем
+				return array_merge($approved, $trashed_with_replies);
+
+			})())) ?>;
+
+			window.currentUser = {
+				id: <?=get_current_user_id()?>,
+				name: <?=json_encode(is_user_logged_in() ? wp_get_current_user()->display_name : '')?>,
+				email: <?=json_encode(is_user_logged_in() ? wp_get_current_user()->user_email : '')?>,
+				role: <?=json_encode(is_user_logged_in() ? wp_get_current_user()->roles[0] : '')?>
+			}
 		</script>
+
+
 
 	</div>
 </section>

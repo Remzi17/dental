@@ -24,7 +24,7 @@
 					</svg>
 					<span data-dislike-count>0</span>
 				</button>
-				<button class="hover-active comment__button" aria-label="" data-reply>
+				<button class="hover-active comment__reply" aria-label="" data-reply>
 					<svg class="comment-icon">
 						<use xlink:href="<?=get_template_directory_uri()?>/assets/img/sprite.svg?ver=<?=spriteVersion()?>#comment"></use>
 					</svg>

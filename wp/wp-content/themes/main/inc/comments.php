@@ -15,9 +15,18 @@ function ajax_add_comment() {
 		])  
 		: [];
 
+	$parent_id = (int) ($_POST['comment_parent'] ?? 0);
+
+	if ($parent_id) {
+		$parent_comment = get_comment($parent_id);
+		if ($parent_comment && $parent_comment->comment_approved === 'trash') {
+			wp_send_json_error(['msg' => 'Нельзя отвечать на удалённый комментарий']);
+		}
+	}
+
 	$commentdata = [
 		'comment_post_ID'      => (int) $_POST['comment_post_ID'],
-		'comment_parent'       => (int) $_POST['comment_parent'],
+		'comment_parent'       => $parent_id,
 		'comment_content'      => wp_kses_post($_POST['comment']),
 		'comment_author'       => sanitize_text_field($_POST['author']),
 		'comment_author_email' => $author_email,
@@ -87,19 +96,19 @@ function handle_comment_delete() {
 	}
 
 	$comment = get_comment($comment_id);
-	if (!$comment) {
-		wp_send_json_error(['msg' => 'Комментарий не найден']);
+	if (!$comment || $comment->comment_approved === 'trash') {
+		wp_send_json_error(['msg' => 'Комментарий уже удалён']);
 	}
 
 	$current_user = wp_get_current_user();
 
 	// Проверка прав: админ/редактор или владелец пользователя
-	$is_admin_or_editor = is_user_logged_in() && (in_array('administrator', (array)$current_user->roles) || in_array('editor', (array)$current_user->roles));
+	$is_editor_or_higher = is_user_logged_in() && current_user_can('edit_others_posts');
 
 	// Гость может удалить, если email совпадает
 	$is_guest_owner = !$current_user->ID && $guest_email && strtolower($guest_email) === strtolower($comment->comment_author_email);
 
-	$is_owner = ($is_admin_or_editor || $is_guest_owner || (is_user_logged_in() && intval($comment->user_id) === get_current_user_id()));
+	$is_owner = ($is_editor_or_higher || $is_guest_owner || (is_user_logged_in() && intval($comment->user_id) === get_current_user_id()));
 
 	error_log("🔹 is_admin_or_editor:$is_admin_or_editor, is_guest_owner:$is_guest_owner, is_owner:$is_owner");
 
@@ -115,10 +124,16 @@ function handle_comment_delete() {
 	if ($has_children > 0) {
 		wp_update_comment([
 			'comment_ID' => $comment_id,
-			'comment_content' => '<em class="gray-text">Комментарий удален</em>'
+			'comment_content' => '<em>Комментарий удален</em>',
+			'comment_approved' => 'trash'
 		]);
 
-		wp_send_json_success(['action' => 'hidden']);
+		error_log("🔹 Комментарий $comment_id скрыт (есть дети)");
+
+		wp_send_json_success([
+			'action' => 'hidden',
+			'parent_id' => (int)$comment->comment_parent
+		]);
 	} else {
 		wp_delete_comment($comment_id, false);
 		wp_send_json_success(['action' => 'deleted']);
@@ -151,6 +166,11 @@ add_action('init', function () {
 // CORE TOGGLE LOGIC
 // ============================================================
 function toggle_comment_reaction($type, $comment_id) {
+	$comment = get_comment($comment_id);
+	if (!$comment || $comment->comment_approved === 'trash') {
+		return ['likes' => $likes ?? 0, 'dislikes' => $dislikes ?? 0, 'active' => false];
+	}
+
 	$likes    = (int) get_comment_meta($comment_id, 'comment_likes', true);
 	$dislikes = (int) get_comment_meta($comment_id, 'comment_dislikes', true);
 
@@ -233,6 +253,12 @@ add_action('wp_ajax_nopriv_dislike_comment', 'ajax_dislike_comment');
 function ajax_like_comment() {
 	check_ajax_referer('like_nonce', 'nonce');
 	$comment_id = (int) ($_POST['comment_id'] ?? 0);
+	$comment = get_comment($comment_id);
+
+	if (!$comment || $comment->comment_approved === 'trash') {
+		wp_send_json_error('Нельзя ставить лайк/дизлайк удалённому комментарию');
+	}
+
 	if (!$comment_id) wp_send_json_error('Invalid comment id');
 	wp_send_json_success(toggle_comment_reaction('like', $comment_id));
 }
