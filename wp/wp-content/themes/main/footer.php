@@ -287,6 +287,7 @@
 	wp_footer(); 
 ?>   
   
+<!--Комментарии  -->
 <script>
 	document.addEventListener('DOMContentLoaded', () => {
 
@@ -828,6 +829,141 @@
 		});  
 	});
 
+</script>
+
+
+<script>
+	document.addEventListener('keydown', e => {
+
+		const runTest = async (steps) => {
+			for (let step of steps) {
+				try {
+					await step()
+					console.log('✅', step.name)
+				} catch (err) {
+					console.error('❌', step.name, err)
+					alert('Ошибка')
+					break
+				}
+			}
+		}
+
+		const wait = (ms) => new Promise(res => setTimeout(res, ms))
+
+		// ---------- F1 ----------
+		if (e.code === 'F1') {
+			runTest([
+				async function addComment() {
+					const textarea = document.querySelector('.comment-add textarea')
+					const buttonAdd = document.querySelector('.comment-add button')
+					if (!textarea || !buttonAdd) throw 'Невозможно добавить комментарий'
+					textarea.value = 'Тестовый комментарий F1'
+					buttonAdd.click()
+					await wait(700)
+				},
+				async function likeComment() {
+					const comments = document.querySelectorAll('.comment')
+					const newComment = Array.from(comments).find(c => c.textContent.includes('Тестовый комментарий F1'))
+					if (!newComment) throw 'Комментарий не найден для лайка'
+					const likeBtn = newComment.querySelector('.comment__like')
+					if (!likeBtn) throw 'Лайк не найден'
+					likeBtn.click()
+					await wait(300)
+				},
+				async function replyComment() {
+					const comments = document.querySelectorAll('.comment')
+					const newComment = Array.from(comments).find(c => c.textContent.includes('Тестовый комментарий F1'))
+					if (!newComment) throw 'Комментарий не найден для ответа'
+					const replyBtn = newComment.querySelector('.comment__reply')
+					if (!replyBtn) throw 'Кнопка ответ не найдена'
+					replyBtn.click()
+					await wait(300)
+					const textarea = newComment.querySelector('.comment-add textarea')
+					const buttonAdd = newComment.querySelector('.comment-add button')
+					if (!textarea || !buttonAdd) throw 'Не найдено поле ответа'
+					textarea.value = 'Ответ к тестовому комменту F1'
+					buttonAdd.click()
+					await wait(700)
+				}
+			])
+		}
+
+		// ---------- F2 ----------
+		if (e.code === 'F2') {
+			runTest([
+				async function addComment() {
+					const textarea = document.querySelector('.comment-add textarea')
+					const buttonAdd = document.querySelector('.comment-add button')
+					if (!textarea || !buttonAdd) throw 'Невозможно добавить комментарий'
+					textarea.value = 'Тестовый комментарий F2'
+					buttonAdd.click()
+					await wait(700)
+				},
+				async function likeComment() {
+					const comments = document.querySelectorAll('.comment')
+					const newComment = Array.from(comments).find(c => c.textContent.includes('Тестовый комментарий F2'))
+					if (!newComment) throw 'Комментарий не найден для лайка'
+					const likeBtn = newComment.querySelector('.comment__like')
+					if (!likeBtn) throw 'Лайк не найден'
+					likeBtn.click()
+					await wait(300)
+				},
+				async function replyCommentParent() {
+					const comments = document.querySelectorAll('.comment')
+					const newComment = Array.from(comments).find(c => c.textContent.includes('Тестовый комментарий F2'))
+					if (!newComment) throw 'Комментарий не найден для ответа'
+					const replyBtn = newComment.querySelector('.comment__reply')
+					if (!replyBtn) throw 'Кнопка ответ не найдена'
+					replyBtn.click()
+					await wait(300)
+					const textarea = newComment.querySelector('.comment-add textarea')
+					const buttonAdd = newComment.querySelector('.comment-add button')
+					if (!textarea || !buttonAdd) throw 'Не найдено поле ответа'
+					textarea.value = 'Ответ 1 к тестовому комменту F2'
+					buttonAdd.click()
+					await wait(700)
+				},
+				async function replyCommentChild() {
+					const comments = document.querySelectorAll('.comment')
+					const parentReply = Array.from(document.querySelectorAll('.comment__text'))
+					.find(el => el.textContent.includes('Ответ 1 к тестовому комменту F2'))
+					?.closest('.comment')
+					if (!parentReply) throw 'Первый ответ не найден для вложенного ответа'
+					const replyBtn = parentReply.querySelector('.comment__reply')
+					if (!replyBtn) throw 'Кнопка ответ не найдена'
+					replyBtn.click()
+					await wait(300)
+					const textarea = parentReply.querySelector('.comment-add textarea')
+					const buttonAdd = parentReply.querySelector('.comment-add button')
+					if (!textarea || !buttonAdd) throw 'Не найдено поле ответа'
+					textarea.value = 'Ответ 2 к тестовому комменту F2'
+					buttonAdd.click()
+					await wait(700)
+				},
+				async function deleteSecondComment() {
+					const secondCommentTextEl = Array.from(document.querySelectorAll('.comment__text'))
+						.find(el => el.textContent.includes('Ответ 1 к тестовому комменту F2'))
+					const secondComment = secondCommentTextEl?.closest('.comment')
+					if (!secondComment) throw 'Второй ответ не найден для удаления'
+					const deleteBtn = secondComment.querySelector('.comment__delete')
+					if (!deleteBtn) throw 'Кнопка удаления не найдена'
+					deleteBtn.click()
+					await wait(700)
+				},
+				async function deleteParentComment() {
+					const parentCommentTextEl = Array.from(document.querySelectorAll('.comment__text'))
+						.find(el => el.textContent.includes('Ответ 2 к тестовому комменту F2'))
+					const parentComment = parentCommentTextEl?.closest('.comment').closest('.comment')
+					if (!parentComment) throw 'Первый ответ не найден для удаления'
+					const deleteBtn = parentComment.querySelector('.comment__delete')
+					if (!deleteBtn) throw 'Кнопка удаления не найдена'
+					deleteBtn.click()
+					await wait(700)
+				}
+			])
+		}
+
+	})
 </script>
 
 </body> 

@@ -2,6 +2,7 @@ import { body, menu, menuActive, menuLink, headerTop, bodyOpenModalClass } from 
 import { debounce, closeOutClick } from "../scripts/core/helpers";
 import { isDesktop, isMobile, isSafari } from "../scripts/ui/browser";
 import { changeScrollbarPadding, hideScrollbar, showScrollbar } from "../scripts/ui/scrollbar";
+
 /* 
 ================================================
 

@@ -6,72 +6,60 @@ import { isHidden } from "../core/checks";
 //
 // Анимации
 
+const fadeTokens = new WeakMap();
+
 // Плавное появление
 export const fadeIn = (el, isItem = false, display, timeout = 400) => {
   document.body.classList.add("_fade");
-
   let elements = isItem ? el : document.querySelectorAll(el);
+  if (!elements.length) elements = [el];
+  elements.forEach((element) => {
+    const token = Symbol();
+    fadeTokens.set(element, token);
 
-  if (elements.length > 0) {
-    elements.forEach((element) => {
-      element.style.opacity = 0;
-      element.style.display = display || "block";
-      element.style.transition = `opacity ${timeout}ms`;
-      setTimeout(() => {
-        element.style.opacity = 1;
-        setTimeout(() => {
-          document.body.classList.remove("_fade");
-        }, timeout);
-      }, 10);
-    });
-  } else {
-    el.style.opacity = 0;
-    el.style.display = display || "block";
-    el.style.transition = `opacity ${timeout}ms`;
+    element.style.transition = "none";
+    element.style.opacity = 0;
+    element.style.display = display || "block";
+    element.style.transition = `opacity ${timeout}ms`;
     setTimeout(() => {
-      el.style.opacity = 1;
+      if (fadeTokens.get(element) !== token) return;
+      element.style.opacity = 1;
       setTimeout(() => {
+        if (fadeTokens.get(element) !== token) return;
         document.body.classList.remove("_fade");
       }, timeout);
     }, 10);
-  }
+  });
 };
 
-// Плавное исчезание
+// Плавное исчезновение
 export const fadeOut = (el, isItem = false, timeout = 400) => {
   document.body.classList.add("_fade");
-
   let elements = isItem ? el : document.querySelectorAll(el);
-
-  if (elements.length > 0) {
-    elements.forEach((element) => {
-      element.style.opacity = 1;
-      element.style.transition = `opacity ${timeout}ms`;
+  if (!elements.length) elements = [el];
+  elements.forEach((element) => {
+    // Новый токен для этой анимации
+    const token = Symbol();
+    fadeTokens.set(element, token);
+    element.style.transition = "none";
+    element.style.opacity = 1;
+    element.style.transition = `opacity ${timeout}ms`;
+    setTimeout(() => {
+      if (fadeTokens.get(element) !== token) return;
       element.style.opacity = 0;
       setTimeout(() => {
+        if (fadeTokens.get(element) !== token) return;
         element.style.display = "none";
-        setTimeout(() => {
-          document.body.classList.remove("_fade");
-        }, timeout);
-      }, timeout);
-      setTimeout(() => {
-        element.removeAttribute("style");
-      }, timeout + 400);
-    });
-  } else {
-    el.style.opacity = 1;
-    el.style.transition = `opacity ${timeout}ms`;
-    el.style.opacity = 0;
-    setTimeout(() => {
-      el.style.display = "none";
-      setTimeout(() => {
         document.body.classList.remove("_fade");
       }, timeout);
-    }, timeout);
-    setTimeout(() => {
-      el.removeAttribute("style");
-    }, timeout + 400);
-  }
+
+      // Убираем inline-стили через немного больше времени, если токен не сменился
+      setTimeout(() => {
+        if (fadeTokens.get(element) !== token) return;
+        element.removeAttribute("style");
+      }, timeout + 400);
+    }, 10);
+  });
 };
 
 // Плавно скрыть с анимацией слайда

@@ -7,6 +7,19 @@
 					<span class="comment__author-name" itemprop="name" data-author></span>
 					<time class="gray-text comment__date" itemprop="datePublished" title="" data-date></time>
 				</div>
+				<div class="context-menu" data-context>
+					<button class="context-menu__button" type="button" >
+						<svg class="dots-icon" aria-hidden="true">
+							<use xlink:href="<?=get_template_directory_uri()?>/assets/img/sprite.svg?ver=<?=spriteVersion()?>#dots"></use>
+						</svg>
+					</button>
+					<div class="context-menu__list" data-context-menu>
+						<button type="button">Редактировать</button>
+						<button type="button">История версий</button>
+						<button type="button">Поделиться</button>
+						<button type="button">Пожаловаться</button>
+					</div>
+				</div>
 			</div>
 			<div class="comment__text" itemprop="text" data-text>
 				<p></p>

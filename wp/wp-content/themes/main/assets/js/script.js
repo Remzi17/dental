@@ -573,72 +573,60 @@
 	//
 	// Анимации
 
+	const fadeTokens = new WeakMap();
+
 	// Плавное появление
 	const fadeIn = (el, isItem = false, display, timeout = 400) => {
 	  document.body.classList.add("_fade");
-
 	  let elements = isItem ? el : document.querySelectorAll(el);
+	  if (!elements.length) elements = [el];
+	  elements.forEach((element) => {
+	    const token = Symbol();
+	    fadeTokens.set(element, token);
 
-	  if (elements.length > 0) {
-	    elements.forEach((element) => {
-	      element.style.opacity = 0;
-	      element.style.display = "block";
-	      element.style.transition = `opacity ${timeout}ms`;
-	      setTimeout(() => {
-	        element.style.opacity = 1;
-	        setTimeout(() => {
-	          document.body.classList.remove("_fade");
-	        }, timeout);
-	      }, 10);
-	    });
-	  } else {
-	    el.style.opacity = 0;
-	    el.style.display = "block";
-	    el.style.transition = `opacity ${timeout}ms`;
+	    element.style.transition = "none";
+	    element.style.opacity = 0;
+	    element.style.display = "block";
+	    element.style.transition = `opacity ${timeout}ms`;
 	    setTimeout(() => {
-	      el.style.opacity = 1;
+	      if (fadeTokens.get(element) !== token) return;
+	      element.style.opacity = 1;
 	      setTimeout(() => {
+	        if (fadeTokens.get(element) !== token) return;
 	        document.body.classList.remove("_fade");
 	      }, timeout);
 	    }, 10);
-	  }
+	  });
 	};
 
-	// Плавное исчезание
+	// Плавное исчезновение
 	const fadeOut = (el, isItem = false, timeout = 400) => {
 	  document.body.classList.add("_fade");
-
 	  let elements = isItem ? el : document.querySelectorAll(el);
-
-	  if (elements.length > 0) {
-	    elements.forEach((element) => {
-	      element.style.opacity = 1;
-	      element.style.transition = `opacity ${timeout}ms`;
+	  if (!elements.length) elements = [el];
+	  elements.forEach((element) => {
+	    // Новый токен для этой анимации
+	    const token = Symbol();
+	    fadeTokens.set(element, token);
+	    element.style.transition = "none";
+	    element.style.opacity = 1;
+	    element.style.transition = `opacity ${timeout}ms`;
+	    setTimeout(() => {
+	      if (fadeTokens.get(element) !== token) return;
 	      element.style.opacity = 0;
 	      setTimeout(() => {
+	        if (fadeTokens.get(element) !== token) return;
 	        element.style.display = "none";
-	        setTimeout(() => {
-	          document.body.classList.remove("_fade");
-	        }, timeout);
-	      }, timeout);
-	      setTimeout(() => {
-	        element.removeAttribute("style");
-	      }, timeout + 400);
-	    });
-	  } else {
-	    el.style.opacity = 1;
-	    el.style.transition = `opacity ${timeout}ms`;
-	    el.style.opacity = 0;
-	    setTimeout(() => {
-	      el.style.display = "none";
-	      setTimeout(() => {
 	        document.body.classList.remove("_fade");
 	      }, timeout);
-	    }, timeout);
-	    setTimeout(() => {
-	      el.removeAttribute("style");
-	    }, timeout + 400);
-	  }
+
+	      // Убираем inline-стили через немного больше времени, если токен не сменился
+	      setTimeout(() => {
+	        if (fadeTokens.get(element) !== token) return;
+	        element.removeAttribute("style");
+	      }, timeout + 400);
+	    }, 10);
+	  });
 	};
 
 	// Плавно скрыть с анимацией слайда
@@ -2198,79 +2186,139 @@
 	}
 
 	/* 
-		================================================
+	  ================================================
 		  
-		Тултипы
+	  Тултипы 
 		
-		================================================
+	  ================================================
 	*/
 
 	function tooltip() {
-	  let tooltipItems = document.querySelectorAll("[data-tooltip]");
+	  const timers = new WeakMap();
 
-	  let calculatePosTooltip = (item) => {
-	    tooltip = item.querySelector(".tooltip");
+	  const getTooltip = (item) => {
+	    let tooltip;
+	    const tooltipIsHtml = item.getAttribute("data-tooltip") === "html";
 
-	    if (getPageSide(item) == "left") {
-	      tooltip.style.left = 0;
-	      tooltip.style.bottom = item.offsetHeight + "px";
+	    if (tooltipIsHtml) {
+	      tooltip = item.querySelector(".tooltip");
 	    } else {
-	      tooltip.style.right = 0;
-	      tooltip.style.bottom = item.offsetHeight + "px";
+	      tooltip = item.querySelector(".tooltip");
+
+	      if (!tooltip) {
+	        let text = "";
+
+	        if (item.hasAttribute("title")) {
+	          text = item.getAttribute("title");
+	          item.removeAttribute("title");
+	        } else if (item.getAttribute("data-tooltip") !== "") {
+	          text = item.getAttribute("data-tooltip");
+	        }
+
+	        tooltip = document.createElement("div");
+	        tooltip.className = "tooltip";
+	        tooltip.textContent = text;
+	        item.append(tooltip);
+	      }
 	    }
+
+	    return tooltip;
 	  };
 
-	  function createTooltips() {
-	    tooltipItems.forEach((item) => {
-	      let timer, tooltip, tooltipText;
+	  const calculatePosTooltip = (item, tooltip) => {
+	    tooltip.style.left = "";
+	    tooltip.style.right = "";
 
-	      let tooltipIsHtml = item.getAttribute("data-tooltip") == "html" ? true : false;
+	    if (getPageSide(item) === "left") {
+	      tooltip.style.left = "0";
+	    } else {
+	      tooltip.style.right = "0";
+	    }
 
-	      if (item.hasAttribute("title")) {
-	        tooltipText = item.getAttribute("title");
-	      } else if (item.getAttribute("data-tooltip") != "") {
-	        tooltipText = item.getAttribute("data-tooltip");
-	      } else {
-	        tooltipText = "";
-	      }
+	    tooltip.style.bottom = item.offsetHeight + "px";
+	  };
 
-	      if (tooltipIsHtml) {
-	        tooltip = item.querySelector(".tooltip");
-	      } else {
-	        tooltip = document.createElement("div");
-	        item.append(tooltip);
-	        tooltip.classList.add("tooltip");
-	        tooltip.textContent = tooltipText;
-	      }
+	  const showTooltip = (item) => {
+	    const tooltip = getTooltip(item);
+	    if (!tooltip) return;
 
-	      calculatePosTooltip(item);
+	    clearTimeout(timers.get(item));
+	    calculatePosTooltip(item, tooltip);
+	    tooltip.classList.add("tooltip_active");
+	  };
 
-	      item.addEventListener("mouseenter", () => {
-	        tooltip.classList.add("tooltip_active");
-	      });
+	  const hideTooltip = (item) => {
+	    const tooltip = item.querySelector(".tooltip");
+	    if (!tooltip) return;
 
-	      item.addEventListener("focusin", () => {
-	        tooltip.classList.add("tooltip_active");
-	      });
+	    const timer = setTimeout(() => {
+	      tooltip.classList.remove("tooltip_active");
+	    }, 200);
 
-	      item.addEventListener("mouseleave", () => {
-	        timer = setTimeout(() => {
-	          tooltip.classList.remove("tooltip_active");
-	        }, 200);
-	      });
+	    timers.set(item, timer);
+	  };
 
-	      item.addEventListener("focusout", () => {
-	        timer = setTimeout(() => {
-	          tooltip.classList.remove("tooltip_active");
-	        }, 200);
-	      });
+	  const getItemFromEvent = (e) => {
+	    if (!(e.target instanceof Element)) return null;
+	    return e.target.closest("[data-tooltip]");
+	  };
 
-	      tooltip.addEventListener("mouseenter", () => clearTimeout(timer));
-	      tooltip.addEventListener("mouseleave", () => tooltip.classList.remove("tooltip_active"));
-	    });
-	  }
+	  document.addEventListener(
+	    "mouseenter",
+	    (e) => {
+	      const item = getItemFromEvent(e);
+	      if (!item) return;
 
-	  createTooltips();
+	      showTooltip(item);
+	    },
+	    true
+	  );
+
+	  document.addEventListener(
+	    "mouseleave",
+	    (e) => {
+	      const item = getItemFromEvent(e);
+	      if (!item) return;
+
+	      hideTooltip(item);
+	    },
+	    true
+	  );
+
+	  document.addEventListener("focusin", (e) => {
+	    const item = getItemFromEvent(e);
+	    if (!item) return;
+
+	    showTooltip(item);
+	  });
+
+	  document.addEventListener("focusout", (e) => {
+	    const item = getItemFromEvent(e);
+	    if (!item) return;
+
+	    hideTooltip(item);
+	  });
+
+	  document.addEventListener("mouseover", (e) => {
+	    if (!(e.target instanceof Element)) return;
+
+	    const tooltip = e.target.closest(".tooltip");
+	    if (!tooltip) return;
+
+	    const item = tooltip.closest("[data-tooltip]");
+	    if (!item) return;
+
+	    clearTimeout(timers.get(item));
+	  });
+
+	  document.addEventListener("mouseout", (e) => {
+	    if (!(e.target instanceof Element)) return;
+
+	    const tooltip = e.target.closest(".tooltip");
+	    if (!tooltip) return;
+
+	    tooltip.classList.remove("tooltip_active");
+	  });
 	}
 
 	/* 
@@ -2927,6 +2975,126 @@
 		new SplitView({});
 	}
 
+	/* 
+		================================================
+		  
+		Контекстное меню
+
+		================================================
+	*/
+
+	function context() {
+	  let activeContext = null;
+
+	  const getMenu = (context) => context.querySelector("[data-context-menu]");
+	  const getTrigger = (context) => context.querySelector("button");
+	  const positionMenu = (context, menu) => {
+	    const trigger = getTrigger(context);
+	    const margin = 8;
+
+	    menu.style.top = "";
+	    menu.style.bottom = "";
+	    menu.style.left = "";
+	    menu.style.right = "";
+
+	    if (getPageSide(context) === "left") {
+	      menu.style.left = "0";
+	    } else {
+	      menu.style.right = "0";
+	    }
+
+	    const rect = trigger.getBoundingClientRect();
+	    const menuHeight = menu.offsetHeight;
+	    const spaceBelow = window.innerHeight - rect.bottom;
+	    const gap = 4;
+
+	    if (spaceBelow >= menuHeight + margin) {
+	      menu.style.top = `${trigger.offsetHeight + gap}px`;
+	    } else {
+	      menu.style.top = `-${menuHeight + gap}px`;
+	    }
+	  };
+
+	  const openMenu = (context) => {
+
+	    const menu = getMenu(context);
+	    if (!menu) return;
+
+	    if (activeContext && activeContext !== context) {
+	      closeMenu(activeContext);
+	    }
+
+	    positionMenu(context, menu);
+
+	    menu.classList.toggle("active");
+
+	    context.classList.add("_context-active");
+	    activeContext = context;
+	  };
+
+	  const closeMenu = (context) => {
+
+	    const menu = getMenu(context);
+	    if (!menu) return;
+
+	    menu.classList.remove("active");
+	    context.classList.remove("_context-active");
+
+	    if (activeContext === context) {
+	      activeContext = null;
+	    }
+
+	    const trigger = getTrigger(context);
+	    trigger?.blur();
+	  };
+
+	  const toggleMenu = (context) => {
+	    context.classList.contains("_context-active") ? closeMenu(context) : openMenu(context);
+	  };
+
+	  document.addEventListener("click", (e) => {
+	    if (!(e.target instanceof Element)) return;
+
+	    const trigger = e.target.closest("[data-context] > button");
+	    const context = trigger?.closest("[data-context]");
+	    const menu = e.target.closest("[data-context-menu]");
+
+	    if (context && trigger) {
+	      e.preventDefault();
+	      toggleMenu(context);
+	      return;
+	    }
+
+	    if (!menu && activeContext) {
+	      closeMenu(activeContext);
+	    }
+	  });
+
+	  document.addEventListener("keydown", (e) => {
+	    if (e.key === "Escape" && activeContext && true) {
+	      closeMenu(activeContext);
+	    }
+	  });
+
+	  document.addEventListener("focusin", (e) => {
+	    if (!activeContext) return;
+	    if (!(e.target instanceof Element)) return;
+
+	    if (!activeContext.contains(e.target)) {
+	      closeMenu(activeContext);
+	    }
+	  });
+
+	  const repositionAllMenus = () => {
+	    document.querySelectorAll("[data-context]._context-active").forEach((context) => {
+	      const menu = context.querySelector("[data-context-menu]");
+	      if (menu) positionMenu(context, menu);
+	    });
+	  };
+
+	  window.addEventListener("resize", debounce(repositionAllMenus, 150));
+	}
+
 	burger();
 	fixedMenu();
 	form();
@@ -2945,6 +3113,7 @@
 	text();
 	video();
 	splitView();
+	context();
 
 	//
 	//

@@ -14,7 +14,6 @@
 	interpolate-size: allow-keywords
   
 .comment
-
 	transition: all .4s
 
 	&:not(:last-of-type)
@@ -40,6 +39,12 @@
 		&>.comment__content>.comment__text 
 			color: var(--gray_dark)
 
+	&__header
+		display: flex
+		align-items: center 
+		justify-content: space-between
+		gap: 12px
+ 
 	&__header,
 	&__text
 		margin-bottom: 12px
@@ -139,11 +144,57 @@
 
 
 
+[data-context]
+	position: relative
+
+[data-context-menu]
+	position: absolute
+	z-index: 11
+
+	opacity: 0
+	pointer-events: none
+	+t
+
+	font-size: 14px
+
+	&.active
+		opacity: 1
+		pointer-events: auto
 
 
+.context-menu  
+	width: max-content
 
+	&__button
+		display: flex
+		align-items: center
+		justify-content: center
+		+adap('width', 28, 20)
+		+adap('height', 28, 20)
 
+		svg 
+			width: min(20px, 80%)
+			height: min(20px, 80%)
 
+			fill: var(--gray_dark)
+
+	&__list 
+		width: max-content
+		+adap('border-radius', 12, 8)
+		background: #fff
+		+bx
+		overflow: hidden
+
+		button 
+			display: flex
+			padding: em(8) em(16)
+			width: 100%
+
+			+t
+
+			+hov
+				background: var(--gray)
+				
 
 
 
