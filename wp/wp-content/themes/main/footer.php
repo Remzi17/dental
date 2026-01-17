@@ -253,6 +253,22 @@
 		</div>
 	</div>
 
+	<!-- История версий комментария -->
+	<div class="popup popup-comment-history" id="popup-comment-history">
+		<div class="popup__dialog">
+			<div class="popup__content popup__content-auto-width">
+				<button class="popup__close" type="button" data-popup-close>
+					<svg class="close">
+						<use xlink:href="<?=get_template_directory_uri()?>/assets/img/sprite.svg#close"></use>
+					</svg>
+				</button>
+				<div class="title-2 popup__title">История версий</div>
+				<div class="text-block popup-comment-history__content">
+				</div>
+			</div> 
+		</div>
+	</div>
+
 	<!-- Полный отзыв -->
 	<div class="popup popup-reviews" id="popup-reviews">
 		<div class="popup__dialog">
@@ -322,6 +338,9 @@
 
 		const guestData = JSON.parse(localStorage.getItem('comment_guest') || '{}')
 
+		const getCommentId = (commentEl) => {
+			return parseInt(commentEl.id.replace('comment-', ''), 10)
+		}
 
 		//
 		//
@@ -353,7 +372,7 @@
 			date = 'только что',
 			likes = 0,
 			dislikes = 0,
-			can_delete = true,
+			can_delete = false,
 			show_reply = true
 		}) => {
 			const template = document.querySelector('#comment-template')
@@ -376,11 +395,12 @@
 				: null
 
 			const isDeleted = commentData?.is_deleted === true
-
 			const likeBtn = element.querySelector('[data-like]')
 			const dislikeBtn = element.querySelector('[data-dislike]')
 			const deleteBtn = element.querySelector('[data-delete]')
 			const replyBtn = element.querySelector('[data-reply]')
+			const editBtn = element.querySelector('[data-comment-edit]')
+			const historyBtn = element.querySelector('[data-comment-history]')
 
 			if (likeBtn) {
 				likeBtn.dataset.commentId = id
@@ -401,6 +421,22 @@
 
 				if ((!can_delete && !isEditorOrHigher) || isDeleted) {
 					deleteBtn.remove()
+				}
+			}
+
+			if (editBtn) {
+				const isEditorOrHigher = ['administrator', 'editor'].includes(currentUser.role)
+
+				if ((!can_delete && !isEditorOrHigher) || isDeleted) {
+					editBtn.remove()
+				}
+			}
+
+			if (historyBtn) {
+				if (!commentData?.has_history) {
+					historyBtn.hidden = true
+				} else {
+					historyBtn.dataset.commentHistory = id
 				}
 			}
 
@@ -588,6 +624,7 @@
 		}
 
 		initReply()
+
 
 		//
 		//
@@ -798,6 +835,256 @@
 		document.addEventListener('click', e => {
 			const btn = e.target.closest('.comment__delete')
 			if (btn) deleteComment(btn)
+		})
+
+
+		// 
+		// 
+		// 
+		// 
+		// Редактирование комментариев
+
+		//
+		//
+		//
+		//
+		// Редактирование комментариев
+
+		const enableEdit = (comment) => {
+			if (comment.classList.contains('is-editing')) return
+
+			const text = comment.querySelector('[data-text]')
+			if (!text) return
+
+			comment.dataset.originalText = text.innerHTML
+
+			text.contentEditable = 'true'
+			text.focus()
+
+			const range = document.createRange()
+			range.selectNodeContents(text)
+			range.collapse(false)
+
+			const sel = window.getSelection()
+			sel.removeAllRanges()
+			sel.addRange(range)
+
+			comment.classList.add('is-editing')
+
+			const actions = comment.querySelector('[data-comment-edit-actions]')
+			if (actions) actions.classList.remove('hidden')
+		}
+
+		const cancelEdit = (comment) => {
+			const text = comment.querySelector('[data-text]')
+			if (!text) return
+
+			text.innerHTML = comment.dataset.originalText
+			text.contentEditable = 'false'
+
+			comment.classList.remove('is-editing')
+
+			const actions = comment.querySelector('[data-comment-edit-actions]')
+			if (actions) actions.classList.add('hidden')
+
+			delete comment.dataset.originalText
+		}
+
+		const normalizeContent = (html = '') => {
+			return html
+				.replace(/<div><br><\/div>/g, '')
+				.replace(/<div>/g, '<p>')
+				.replace(/<\/div>/g, '</p>')
+				.replace(/&nbsp;/g, ' ')
+				.trim()
+		}
+
+		const finishEdit = (comment, html) => {
+			const text = comment.querySelector('[data-text]')
+			if (!text) return
+
+			text.innerHTML = html
+			text.contentEditable = 'false'
+
+			comment.classList.remove('is-editing')
+
+			const actions = comment.querySelector('[data-comment-edit-actions]')
+			if (actions) actions.classList.add('hidden')
+
+			delete comment.dataset.originalText
+
+			const historyBtn = comment.querySelector('[data-comment-history]')
+			if (historyBtn) historyBtn.hidden = false
+		}
+
+		const saveEdit = async (comment, commentId) => {
+			const textEl = comment.querySelector('[data-text]')
+			if (!textEl) return
+
+			const newText = normalizeContent(textEl.innerHTML)
+			if (!newText) {
+				cancelEdit(comment)
+				return
+			}
+
+			try {
+				const res = await fetch('<?=admin_url("admin-ajax.php")?>', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+					body: new URLSearchParams({
+						action: 'edit_comment',
+						comment_id: commentId,
+						text: newText
+					})
+				})
+
+				const json = await res.json()
+				if (!json.success) throw new Error(json.data || 'Ошибка сохранения')
+
+				finishEdit(comment, newText)
+			} catch (e) {
+				console.error(e)
+				cancelEdit(comment)
+			}
+		}
+
+		//
+		//
+		//
+		//
+		// События
+
+		document.addEventListener('click', (e) => {
+			const comment = e.target.closest('.comment')
+			if (!comment) return
+
+			if (e.target.closest('[data-comment-edit]')) {
+				enableEdit(comment)
+				return
+			}
+
+			if (e.target.closest('[data-cancel-edit]')) {
+				cancelEdit(comment)
+				return
+			}
+
+			if (e.target.closest('[data-save-edit]')) {
+				saveEdit(comment, getCommentId(comment))
+			}
+		})
+
+		document.addEventListener('keydown', (e) => {
+			const comment = document.querySelector('.comment.is-editing')
+			if (!comment) return
+
+			if (e.key === 'Escape') cancelEdit(comment)
+
+			if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+				saveEdit(comment, getCommentId(comment))
+			}
+		})
+
+		//
+		//
+		//
+		//
+		// История версий
+
+		const openHistory = async (comment) => {
+			const commentId = getCommentId(comment)
+			if (!commentId) return
+
+			try {
+				const res = await fetch('<?=admin_url("admin-ajax.php")?>', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+					body: new URLSearchParams({
+						action: 'get_comment_history',
+						comment_id: commentId
+					})
+				})
+
+				const json = await res.json()
+				if (!json.success) throw new Error(json.data)
+
+				const { history, can_restore } = json.data
+				if (!history.length) {
+					alert('История версий пустая')
+					return
+				}
+
+				const popup = document.querySelector('.popup-comment-history')
+				const content = popup.querySelector('.popup-comment-history__content')
+
+				content.innerHTML = `
+					<table>
+						<thead>
+							<tr>
+								<th>Редактор</th>
+								<th>Дата</th>
+								<th>Комментарий</th>
+								${can_restore ? '<th></th>' : ''}
+							</tr>
+						</thead>
+						<tbody>
+							${history.map((h, i) => `
+								<tr>
+									<td>${h.editor_name || 'Гость'}</td>
+									<td>${h.date}</td>
+									<td>${h.text}</td>
+									${can_restore ? `
+										<td>
+											<button
+												class="button button_mini popup-comment-restore"
+												data-comment-id="${h.comment_id}"
+												data-version-index="${i}"
+												type="button">
+												Восстановить
+											</button>
+										</td>
+									` : ''}
+								</tr>
+							`).join('')}
+						</tbody>
+					</table>
+				`
+
+				fadeIn(popup, true)
+
+				const restoreBtn = content.querySelector('.popup-comment-restore')
+				if (restoreBtn) restoreBtn.focus()
+
+			} catch (e) {
+				console.error(e)
+				alert('Ошибка загрузки истории')
+			}
+		}
+
+		document.addEventListener('click', (e) => {
+			const btn = e.target.closest('[data-comment-history]')
+			if (!btn) return
+
+			const comment = btn.closest('.comment')
+			if (!comment) return
+
+			openHistory(comment)
+		})
+
+		document.addEventListener('click', (e) => {
+			const btn = e.target.closest('.popup-comment-restore')
+			if (!btn) return
+
+			const tr = btn.closest('tr')
+			const text = tr.querySelector('td:nth-child(3)')?.innerHTML
+
+			const comment = document.querySelector(`#comment-${btn.dataset.commentId}`)
+			if (!comment) return
+
+			const textEl = comment.querySelector('[data-text]')
+			if (textEl) textEl.innerHTML = text
+
+			fadeOut(document.querySelector('.popup-comment-history'), true)
+			enableEdit(comment)
 		})
 
 	})

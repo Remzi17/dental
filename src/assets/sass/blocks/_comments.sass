@@ -149,15 +149,17 @@
 
 [data-context-menu]
 	position: absolute
-	z-index: 11
+	z-index: 10
 
 	opacity: 0
 	pointer-events: none
-	+t
+	+t(.2)
+	translate: 0 -8px
 
 	font-size: 14px
 
 	&.active
+		translate: 0 0
 		opacity: 1
 		pointer-events: auto
 
@@ -167,7 +169,7 @@
 
 	&__button
 		display: flex
-		align-items: center
+		align-items: center 
 		justify-content: center
 		+adap('width', 28, 20)
 		+adap('height', 28, 20)
@@ -185,16 +187,26 @@
 		+bx
 		overflow: hidden
 
-		button 
-			display: flex
-			padding: em(8) em(16)
-			width: 100%
+	&__item 
+		display: flex
+		padding: em(8) em(16)
+		width: 100%
 
-			+t
+		transition: background .3s
 
-			+hov
-				background: var(--gray)
-				
+		&[disabled]
+			opacity: .5
+
+		&:not(:last-child)
+			border-bottom: 1px solid var(--gray)
+
+		+hov
+			background: var(--gray)
+
+		&:focus-visible 
+			outline-offset: -3px
+
+
 
 
 

@@ -308,6 +308,273 @@ add_action('wp_ajax_dislike_comment', 'ajax_dislike_comment');
 add_action('wp_ajax_nopriv_dislike_comment', 'ajax_dislike_comment');
 
 
+//
+//
+//
+//
+// Редактирование комментариев
+
+function can_edit_comment($comment) {
+	if (is_user_logged_in()) {
+		if (current_user_can('edit_others_posts')) return true;
+		return get_current_user_id() === (int) $comment->user_id;
+	}
+
+	if (!empty($_COOKIE['guest_email']) && !empty($comment->comment_author_email)) {
+		return $_COOKIE['guest_email'] === $comment->comment_author_email;
+	}
+
+	return false;
+}
+
+function ajax_edit_comment() {
+	$comment_id = (int) ($_POST['comment_id'] ?? 0);
+	$text = trim($_POST['text'] ?? '');
+
+	if (!$comment_id || $text === '') {
+		wp_send_json_error('Некорректные данные');
+	}
+
+	$comment = get_comment($comment_id);
+	if (!$comment) {
+		wp_send_json_error('Комментарий не найден');
+	}
+
+	if (!can_edit_comment($comment)) {
+		wp_send_json_error('Нет прав');
+	}
+
+	$history = get_comment_meta($comment_id, 'comment_edit_history', true);
+	if (!is_array($history)) {
+		$history = [];
+	}
+
+	$history[] = [
+		'text' => $comment->comment_content,
+		'date' => current_time('mysql'),
+		'editor_id' => get_current_user_id()
+	];
+
+	update_comment_meta($comment_id, 'comment_edit_history', $history);
+
+	wp_update_comment([
+		'comment_ID' => $comment_id,
+		'comment_content' => wp_kses_post($text)
+	]);
+
+	wp_send_json_success();
+}
+
+add_action('wp_ajax_edit_comment', 'ajax_edit_comment');
+add_action('wp_ajax_nopriv_edit_comment', 'ajax_edit_comment');
+
+
+function ajax_get_comment_history() {
+	$comment_id = (int) ($_POST['comment_id'] ?? 0);
+	if (!$comment_id) wp_send_json_error('Некорректный ID');
+
+	$history = get_comment_meta($comment_id, 'comment_edit_history', true);
+	if (!is_array($history)) $history = [];
+
+	foreach ($history as &$item) {
+		if (!empty($item['editor_id'])) {
+			$user = get_userdata($item['editor_id']);
+			if ($user) {
+				$item['editor_name'] = $user->display_name ?: $user->user_nicename;
+			}
+		}
+		$item['comment_id'] = $comment_id;
+	}
+
+	$comment = get_comment($comment_id);
+	$can_restore = false;
+
+	if ($comment) {
+		if (current_user_can('edit_others_posts')) {
+			$can_restore = true;
+		} elseif (is_user_logged_in() && get_current_user_id() === (int) $comment->user_id) {
+			$can_restore = true;
+		}
+	}
+
+	wp_send_json_success([
+		'history' => $history,
+		'can_restore' => $can_restore
+	]);
+}
+
+add_action('wp_ajax_get_comment_history', 'ajax_get_comment_history');
+add_action('wp_ajax_nopriv_get_comment_history', 'ajax_get_comment_history');
+
+
+function ajax_restore_comment_version() {
+	$comment_id = (int) ($_POST['comment_id'] ?? 0);
+	$index = (int) ($_POST['version_index'] ?? -1);
+
+	$history = get_comment_meta($comment_id, 'comment_edit_history', true);
+	if (!is_array($history) || !isset($history[$index])) {
+		wp_send_json_error('Версия не найдена');
+	}
+
+	wp_update_comment([
+		'comment_ID' => $comment_id,
+		'comment_content' => wp_kses_post($history[$index]['text'])
+	]);
+
+	wp_send_json_success();
+}
+
+add_action('wp_ajax_restore_comment_version', 'ajax_restore_comment_version');
+
+
+function ajax_delete_comment_version() {
+	$comment_id = (int) ($_POST['comment_id'] ?? 0);
+	$index = (int) ($_POST['version_index'] ?? -1);
+
+	$history = get_comment_meta($comment_id, 'comment_edit_history', true);
+	if (!is_array($history) || !isset($history[$index])) {
+		wp_send_json_error('Версия не найдена');
+	}
+
+	unset($history[$index]);
+	$history = array_values($history);
+
+	update_comment_meta($comment_id, 'comment_edit_history', $history);
+
+	wp_send_json_success();
+}
+
+add_action('wp_ajax_delete_comment_version', 'ajax_delete_comment_version');
+
+
+add_action('add_meta_boxes_comment', function($comment) {
+	add_meta_box(
+		'comment_edit_history',
+		'История версий комментария',
+		'render_comment_edit_history_meta_box',
+		'comment',
+		'normal',
+		'high'
+	);
+});
+
+// Функция рендера метабокса
+function render_comment_edit_history_meta_box($comment) {
+	$history = get_comment_meta($comment->comment_ID, 'comment_edit_history', true);
+
+	if (!is_array($history)) {
+		$history = [];
+	}
+
+	if (!empty($history)) {
+		echo '<table style="width:100%; border-collapse: collapse;">';
+		echo '<thead>';
+		echo '<tr>';
+		echo '<th style="border:1px solid #ddd; padding: 8px">Редактор</th>';
+		echo '<th style="border:1px solid #ddd; padding: 8px">Дата</th>';
+		echo '<th style="border:1px solid #ddd; padding: 8px">Комментарий</th>';
+		echo '<th style="border:1px solid #ddd; padding: 8px">Действие</th>';
+		echo '</tr>';
+		echo '</thead>';
+		echo '<tbody>';
+
+		if (!is_array($history)) {
+			$history = [];
+		}
+
+		foreach ($history as $i => $item) {
+			$editor_name = $user ? ($user->display_name ?: $user->user_nicename) : 'Гость';
+
+			echo '<tr>';
+			echo '<td style="border:1px solid #ddd; padding: 8px">' . esc_html($editor_name) . '</td>';
+			echo '<td style="border:1px solid #ddd; padding: 8px">' . esc_html($item['date']) . '</td>';
+			echo '<td style="border:1px solid #ddd; padding: 8px">' . wp_kses_post($item['text']) . '</td>';
+			echo '<td style="border:1px solid #ddd; padding: 8px; display: flex; gap: 4px;">';
+			echo '<button class="button button-primary restore-version-admin" type="button" data-comment-id="' . esc_attr($comment->comment_ID) . '" data-version-index="' . esc_attr($i) . '">Восстановить</button>';
+			echo '<button class="button delete-version-admin" type="button" data-comment-id="' . esc_attr($comment->comment_ID) . '" data-version-index="' . esc_attr($i) . '">Удалить</button>';
+			echo '</td>';
+			echo '</tr>';
+		}
+
+		echo '</tbody>';
+		echo '</table>';
+
+		?>
+			<script>
+				document.addEventListener('click', async (e) => {
+					const restoreBtn = e.target.closest('.restore-version-admin');
+					const deleteBtn = e.target.closest('.delete-version-admin');
+
+					if (!restoreBtn && !deleteBtn) return;
+
+					const commentId = (restoreBtn || deleteBtn).dataset.commentId;
+					const versionIndex = (restoreBtn || deleteBtn).dataset.versionIndex;
+
+					if (restoreBtn) {
+						try {
+							const res = await fetch(ajaxurl, {
+								method: 'POST',
+								headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+								body: new URLSearchParams({
+									action: 'restore_comment_version',
+									comment_id: commentId,
+									version_index: versionIndex
+								})
+							});
+
+							const json = await res.json();
+
+							if (json.success) {
+								alert('Версия успешно восстановлена!');
+								location.reload();
+							} else {
+								alert('Ошибка при восстановлении: ' + json.data);
+							}
+						} catch (err) {
+							console.error(err);
+							alert('Ошибка при восстановлении версии');
+						}
+					}
+
+					if (deleteBtn) {
+						if (!confirm('Вы уверены, что хотите удалить эту версию?')) return;
+
+						const row = deleteBtn.closest('tr');
+
+						try {
+							const res = await fetch(ajaxurl, {
+								method: 'POST',
+								headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+								body: new URLSearchParams({
+									action: 'delete_comment_version',
+									comment_id: commentId,
+									version_index: versionIndex
+								})
+							});
+
+							const json = await res.json();
+
+							console.log(json);
+
+							if (json.success) {
+								row.remove();
+							} else {
+								alert('Ошибка при удалении: ' + json.data);
+							}
+						} catch (err) {
+							console.error(err);
+							alert('Ошибка при удалении версии');
+						}
+					}
+				});
+			</script>
+		<?
+	} else {
+		echo '<p>История версий отсутствует.</p>';
+	}
+}
+
+
 // 
 // 
 // 

@@ -567,140 +567,6 @@
 	window.addEventListener("scroll", throttle(fixedMenu, 100));
 	window.addEventListener("resize", throttle(fixedMenu, 100));
 
-	//
-	//
-	//
-	//
-	// Анимации
-
-	const fadeTokens = new WeakMap();
-
-	// Плавное появление
-	const fadeIn = (el, isItem = false, display, timeout = 400) => {
-	  document.body.classList.add("_fade");
-	  let elements = isItem ? el : document.querySelectorAll(el);
-	  if (!elements.length) elements = [el];
-	  elements.forEach((element) => {
-	    const token = Symbol();
-	    fadeTokens.set(element, token);
-
-	    element.style.transition = "none";
-	    element.style.opacity = 0;
-	    element.style.display = "block";
-	    element.style.transition = `opacity ${timeout}ms`;
-	    setTimeout(() => {
-	      if (fadeTokens.get(element) !== token) return;
-	      element.style.opacity = 1;
-	      setTimeout(() => {
-	        if (fadeTokens.get(element) !== token) return;
-	        document.body.classList.remove("_fade");
-	      }, timeout);
-	    }, 10);
-	  });
-	};
-
-	// Плавное исчезновение
-	const fadeOut = (el, isItem = false, timeout = 400) => {
-	  document.body.classList.add("_fade");
-	  let elements = isItem ? el : document.querySelectorAll(el);
-	  if (!elements.length) elements = [el];
-	  elements.forEach((element) => {
-	    // Новый токен для этой анимации
-	    const token = Symbol();
-	    fadeTokens.set(element, token);
-	    element.style.transition = "none";
-	    element.style.opacity = 1;
-	    element.style.transition = `opacity ${timeout}ms`;
-	    setTimeout(() => {
-	      if (fadeTokens.get(element) !== token) return;
-	      element.style.opacity = 0;
-	      setTimeout(() => {
-	        if (fadeTokens.get(element) !== token) return;
-	        element.style.display = "none";
-	        document.body.classList.remove("_fade");
-	      }, timeout);
-
-	      // Убираем inline-стили через немного больше времени, если токен не сменился
-	      setTimeout(() => {
-	        if (fadeTokens.get(element) !== token) return;
-	        element.removeAttribute("style");
-	      }, timeout + 400);
-	    }, 10);
-	  });
-	};
-
-	// Плавно скрыть с анимацией слайда
-	const _slideUp$1 = (target, duration = 400, showmore = 0) => {
-	  if (target && !target.classList.contains("_slide")) {
-	    target.classList.add("_slide");
-	    target.style.transitionProperty = "height, margin, padding";
-	    target.style.transitionDuration = duration + "ms";
-	    target.style.height = `${target.offsetHeight}px`;
-	    target.offsetHeight;
-	    target.style.overflow = "hidden";
-	    target.style.height = showmore ? `${showmore}px` : `0px`;
-	    target.style.paddingBlock = 0;
-	    target.style.marginBlock = 0;
-	    window.setTimeout(() => {
-	      target.style.display = !showmore ? "none" : "block";
-	      !showmore ? target.style.removeProperty("height") : null;
-	      target.style.removeProperty("padding-top");
-	      target.style.removeProperty("padding-bottom");
-	      target.style.removeProperty("margin-top");
-	      target.style.removeProperty("margin-bottom");
-	      !showmore ? target.style.removeProperty("overflow") : null;
-	      target.style.removeProperty("transition-duration");
-	      target.style.removeProperty("transition-property");
-	      target.classList.remove("_slide");
-	      document.dispatchEvent(
-	        new CustomEvent("slideUpDone", {
-	          detail: {
-	            target: target,
-	          },
-	        })
-	      );
-	    }, duration);
-	  }
-	};
-
-	// Плавно показать с анимацией слайда
-	const _slideDown$1 = (target, duration = 400) => {
-	  if (target && !target.classList.contains("_slide")) {
-	    target.style.removeProperty("display");
-	    let display = window.getComputedStyle(target).display;
-	    if (display === "none") display = "block";
-	    target.style.display = display;
-	    let height = target.offsetHeight;
-	    target.style.overflow = "hidden";
-	    target.style.height = 0;
-	    target.style.paddingBLock = 0;
-	    target.style.marginBlock = 0;
-	    target.offsetHeight;
-	    target.style.transitionProperty = "height, margin, padding";
-	    target.style.transitionDuration = duration + "ms";
-	    target.style.height = height + "px";
-	    target.style.removeProperty("padding-top");
-	    target.style.removeProperty("padding-bottom");
-	    target.style.removeProperty("margin-top");
-	    target.style.removeProperty("margin-bottom");
-	    window.setTimeout(() => {
-	      target.style.removeProperty("height");
-	      target.style.removeProperty("overflow");
-	      target.style.removeProperty("transition-duration");
-	      target.style.removeProperty("transition-property");
-	    }, duration);
-	  }
-	};
-
-	// Плавно изменить состояние между _slideUp и _slideDown
-	const _slideToggle = (target, duration = 400) => {
-	  if (target && isHidden(target)) {
-	    return _slideDown$1(target, duration);
-	  } else {
-	    return _slideUp$1(target, duration);
-	  }
-	};
-
 	// Очистка input и textarea при закрытии модалки и отправки формы / Удаление классов ошибки
 	let inputs = document.querySelectorAll("input, textarea");
 
@@ -1661,6 +1527,145 @@
 	    };
 	  }
 	}
+
+	//
+	//
+	//
+	//
+	// Анимации
+
+	const fadeTokens = new WeakMap();
+
+	// Плавное появление
+	window.fadeIn = (el, isItem = false, display, timeout = 400) => {
+	  document.body.classList.add("_fade");
+	  let elements = isItem ? el : document.querySelectorAll(el);
+	  if (!elements.length) elements = [el];
+
+	  elements.forEach((element) => {
+	    const token = Symbol();
+	    fadeTokens.set(element, token);
+
+	    element.style.transition = "none";
+	    element.style.opacity = 0;
+	    element.style.display = display || "block";
+	    element.style.transition = `opacity ${timeout}ms`;
+
+	    setTimeout(() => {
+	      if (fadeTokens.get(element) !== token) return;
+	      element.style.opacity = 1;
+
+	      setTimeout(() => {
+	        if (fadeTokens.get(element) !== token) return;
+	        document.body.classList.remove("_fade");
+	      }, timeout);
+	    }, 10);
+	  });
+	};
+
+	// Плавное исчезновение
+	window.fadeOut = (el, isItem = false, timeout = 400) => {
+	  document.body.classList.add("_fade");
+	  let elements = isItem ? el : document.querySelectorAll(el);
+	  if (!elements.length) elements = [el];
+
+	  elements.forEach((element) => {
+	    const token = Symbol();
+	    fadeTokens.set(element, token);
+
+	    element.style.transition = "none";
+	    element.style.opacity = 1;
+	    element.style.transition = `opacity ${timeout}ms`;
+
+	    setTimeout(() => {
+	      if (fadeTokens.get(element) !== token) return;
+	      element.style.opacity = 0;
+
+	      setTimeout(() => {
+	        if (fadeTokens.get(element) !== token) return;
+	        element.style.display = "none";
+	        document.body.classList.remove("_fade");
+	      }, timeout);
+
+	      setTimeout(() => {
+	        if (fadeTokens.get(element) !== token) return;
+	        element.removeAttribute("style");
+	      }, timeout + 400);
+	    }, 10);
+	  });
+	};
+
+	// Плавно скрыть с анимацией слайда
+	const _slideUp$1 = (target, duration = 400, showmore = 0) => {
+	  if (target && !target.classList.contains("_slide")) {
+	    target.classList.add("_slide");
+	    target.style.transitionProperty = "height, margin, padding";
+	    target.style.transitionDuration = duration + "ms";
+	    target.style.height = `${target.offsetHeight}px`;
+	    target.offsetHeight;
+	    target.style.overflow = "hidden";
+	    target.style.height = showmore ? `${showmore}px` : `0px`;
+	    target.style.paddingBlock = 0;
+	    target.style.marginBlock = 0;
+	    window.setTimeout(() => {
+	      target.style.display = !showmore ? "none" : "block";
+	      !showmore ? target.style.removeProperty("height") : null;
+	      target.style.removeProperty("padding-top");
+	      target.style.removeProperty("padding-bottom");
+	      target.style.removeProperty("margin-top");
+	      target.style.removeProperty("margin-bottom");
+	      !showmore ? target.style.removeProperty("overflow") : null;
+	      target.style.removeProperty("transition-duration");
+	      target.style.removeProperty("transition-property");
+	      target.classList.remove("_slide");
+	      document.dispatchEvent(
+	        new CustomEvent("slideUpDone", {
+	          detail: {
+	            target: target,
+	          },
+	        })
+	      );
+	    }, duration);
+	  }
+	};
+
+	// Плавно показать с анимацией слайда
+	const _slideDown$1 = (target, duration = 400) => {
+	  if (target && !target.classList.contains("_slide")) {
+	    target.style.removeProperty("display");
+	    let display = window.getComputedStyle(target).display;
+	    if (display === "none") display = "block";
+	    target.style.display = display;
+	    let height = target.offsetHeight;
+	    target.style.overflow = "hidden";
+	    target.style.height = 0;
+	    target.style.paddingBLock = 0;
+	    target.style.marginBlock = 0;
+	    target.offsetHeight;
+	    target.style.transitionProperty = "height, margin, padding";
+	    target.style.transitionDuration = duration + "ms";
+	    target.style.height = height + "px";
+	    target.style.removeProperty("padding-top");
+	    target.style.removeProperty("padding-bottom");
+	    target.style.removeProperty("margin-top");
+	    target.style.removeProperty("margin-bottom");
+	    window.setTimeout(() => {
+	      target.style.removeProperty("height");
+	      target.style.removeProperty("overflow");
+	      target.style.removeProperty("transition-duration");
+	      target.style.removeProperty("transition-property");
+	    }, duration);
+	  }
+	};
+
+	// Плавно изменить состояние между _slideUp и _slideDown
+	const _slideToggle = (target, duration = 400) => {
+	  if (target && isHidden(target)) {
+	    return _slideDown$1(target, duration);
+	  } else {
+	    return _slideUp$1(target, duration);
+	  }
+	};
 
 	/* 
 		================================================

@@ -100,7 +100,7 @@
 										?>
 									</a>
 									<div class="doctor__item-content">
-										<h3 class="title-3 doctor__item-title">
+										<h3 class="title-4 doctor__item-title">
 											<a href="<?=esc_url($author_url); ?>" class="hover-active"><?=esc_html($author_name); ?></a>
 										</h3>
 										<p class="doctor__item-text">

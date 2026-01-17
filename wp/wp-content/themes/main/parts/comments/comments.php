@@ -101,6 +101,8 @@
 					'is_own_dislike' => $is_own_dislike,
 					'is_deleted' => $is_deleted,
 					'can_delete' => can_delete_comment($c),
+					'can_edit' => can_edit_comment($c),
+					'has_history' => !empty(get_comment_meta($c->comment_ID, 'comment_edit_history', true))
 				];
 
 			}, (function() {

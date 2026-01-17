@@ -9,10 +9,11 @@ import { isHidden } from "../core/checks";
 const fadeTokens = new WeakMap();
 
 // Плавное появление
-export const fadeIn = (el, isItem = false, display, timeout = 400) => {
+window.fadeIn = (el, isItem = false, display, timeout = 400) => {
   document.body.classList.add("_fade");
   let elements = isItem ? el : document.querySelectorAll(el);
   if (!elements.length) elements = [el];
+
   elements.forEach((element) => {
     const token = Symbol();
     fadeTokens.set(element, token);
@@ -21,9 +22,11 @@ export const fadeIn = (el, isItem = false, display, timeout = 400) => {
     element.style.opacity = 0;
     element.style.display = display || "block";
     element.style.transition = `opacity ${timeout}ms`;
+
     setTimeout(() => {
       if (fadeTokens.get(element) !== token) return;
       element.style.opacity = 1;
+
       setTimeout(() => {
         if (fadeTokens.get(element) !== token) return;
         document.body.classList.remove("_fade");
@@ -33,27 +36,29 @@ export const fadeIn = (el, isItem = false, display, timeout = 400) => {
 };
 
 // Плавное исчезновение
-export const fadeOut = (el, isItem = false, timeout = 400) => {
+window.fadeOut = (el, isItem = false, timeout = 400) => {
   document.body.classList.add("_fade");
   let elements = isItem ? el : document.querySelectorAll(el);
   if (!elements.length) elements = [el];
+
   elements.forEach((element) => {
-    // Новый токен для этой анимации
     const token = Symbol();
     fadeTokens.set(element, token);
+
     element.style.transition = "none";
     element.style.opacity = 1;
     element.style.transition = `opacity ${timeout}ms`;
+
     setTimeout(() => {
       if (fadeTokens.get(element) !== token) return;
       element.style.opacity = 0;
+
       setTimeout(() => {
         if (fadeTokens.get(element) !== token) return;
         element.style.display = "none";
         document.body.classList.remove("_fade");
       }, timeout);
 
-      // Убираем inline-стили через немного больше времени, если токен не сменился
       setTimeout(() => {
         if (fadeTokens.get(element) !== token) return;
         element.removeAttribute("style");

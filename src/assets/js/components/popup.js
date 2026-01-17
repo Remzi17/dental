@@ -1,6 +1,5 @@
 import { body, bodyOpenModalClass } from "../scripts/variables";
 import { hideScrollbar, showScrollbar } from "../scripts/ui/scrollbar";
-import { fadeIn, fadeOut } from "../scripts/ui/animation";
 import { getHash } from "../scripts/ui/url";
 import { clearInputs } from "../scripts/forms/validation";
 

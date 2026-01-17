@@ -8,21 +8,27 @@
 					<time class="gray-text comment__date" itemprop="datePublished" title="" data-date></time>
 				</div>
 				<div class="context-menu" data-context>
-					<button class="context-menu__button" type="button" >
+					<button class="context-menu__button" type="button">
 						<svg class="dots-icon" aria-hidden="true">
 							<use xlink:href="<?=get_template_directory_uri()?>/assets/img/sprite.svg?ver=<?=spriteVersion()?>#dots"></use>
 						</svg>
 					</button>
 					<div class="context-menu__list" data-context-menu>
-						<button type="button">Редактировать</button>
-						<button type="button">История версий</button>
-						<button type="button">Поделиться</button>
-						<button type="button">Пожаловаться</button>
+						<button class="context-menu__item" type="button" data-comment-edit>Редактировать</button>
+						<button class="context-menu__item" type="button" data-comment-history>История версий</button>
+						<button class="context-menu__item" type="button">Поделиться</button>
+						<button class="context-menu__item" type="button">Пожаловаться</button>
 					</div>
 				</div>
 			</div>
-			<div class="comment__text" itemprop="text" data-text>
+			<div class="comment__text" itemprop="text" data-text contenteditable="false">
 				<p></p>
+			</div>
+			<div class="section-bottom comment__edit-actions hidden" data-comment-edit-actions>
+				<div class="flex">
+					<button class="button button_small button_border" type="button" data-cancel-edit>Отменить</button>
+					<button class="button button_small" type="button" data-save-edit>Сохранить</button>
+				</div>
 			</div>
 			<div class="gray-text comment__meta">
 				<button class="hover-active comment__like" aria-label="" data-like>

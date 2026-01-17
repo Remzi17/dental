@@ -134,16 +134,39 @@
 		 
 	table 
 		width: 100% !important 
+		height: 100%
+
 		border-collapse: collapse
 		+adap('font-size', 16, 14)
+
+		thead 
+			&>tr
+				&:first-child
+					&>*
+						&:first-child
+							+adap('border-top-left-radius', 20, 16)
+
+						&:last-child
+							+adap('border-top-right-radius', 20, 16)
+
+		tbody
+			tr
+				&:last-child
+					&>*
+						&:first-child
+							+adap('border-bottom-left-radius', 20, 16)
+
+						&:last-child
+							+adap('border-bottom-right-radius', 20, 16)
+							
 
 		th
 			font-weight: 700
 			text-align: left
 
 		td, th
-			+adap('padding', 16, 12) 
-	
+			+adap('padding', 16, 8) 
+
 		thead
 			background: var(--active)
 

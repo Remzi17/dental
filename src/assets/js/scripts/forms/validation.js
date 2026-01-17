@@ -1,5 +1,4 @@
 import { body } from "../variables";
-import { fadeIn, fadeOut } from "../ui/animation";
 
 // Очистка input и textarea при закрытии модалки и отправки формы / Удаление классов ошибки
 let inputs = document.querySelectorAll("input, textarea");

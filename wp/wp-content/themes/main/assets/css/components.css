@@ -1625,6 +1625,7 @@ li.menu-item-has-children .sub-menu > li:last-child > a {
 }
 .text-block h4 {
   font-weight: 600;
+  line-height: 1.4;
 }
 @media (max-width: 1500px) {
   .text-block h4 {
@@ -1791,6 +1792,7 @@ li.menu-item-has-children .sub-menu > li:last-child > a {
 }
 .text-block table {
   width: 100% !important;
+  height: 100%;
   border-collapse: collapse;
 }
 @media (max-width: 1500px) {
@@ -1803,13 +1805,53 @@ li.menu-item-has-children .sub-menu > li:last-child > a {
     font-size: 16px;
   }
 }
+@media (max-width: 1500px) {
+  .text-block table thead > tr:first-child > *:first-child {
+    border-top-left-radius: round(clamp(min(20px, 16px),  15.2px  +  0.25vw , max(20px, 16px)), 1px);
+  }
+}
+@media (min-width: 1501px) {
+  .text-block table thead > tr:first-child > *:first-child {
+    border-top-left-radius: 20px;
+  }
+}
+@media (max-width: 1500px) {
+  .text-block table thead > tr:first-child > *:last-child {
+    border-top-right-radius: round(clamp(min(20px, 16px),  15.2px  +  0.25vw , max(20px, 16px)), 1px);
+  }
+}
+@media (min-width: 1501px) {
+  .text-block table thead > tr:first-child > *:last-child {
+    border-top-right-radius: 20px;
+  }
+}
+@media (max-width: 1500px) {
+  .text-block table tbody tr:last-child > *:first-child {
+    border-bottom-left-radius: round(clamp(min(20px, 16px),  15.2px  +  0.25vw , max(20px, 16px)), 1px);
+  }
+}
+@media (min-width: 1501px) {
+  .text-block table tbody tr:last-child > *:first-child {
+    border-bottom-left-radius: 20px;
+  }
+}
+@media (max-width: 1500px) {
+  .text-block table tbody tr:last-child > *:last-child {
+    border-bottom-right-radius: round(clamp(min(20px, 16px),  15.2px  +  0.25vw , max(20px, 16px)), 1px);
+  }
+}
+@media (min-width: 1501px) {
+  .text-block table tbody tr:last-child > *:last-child {
+    border-bottom-right-radius: 20px;
+  }
+}
 .text-block table th {
   font-weight: 700;
   text-align: left;
 }
 @media (max-width: 1500px) {
   .text-block table td, .text-block table th {
-    padding: round(clamp(min(16px, 12px),  11.2px  +  0.25vw , max(16px, 12px)), 1px);
+    padding: round(clamp(min(16px, 8px),  6.4px  +  0.5vw , max(16px, 8px)), 1px);
   }
 }
 @media (min-width: 1501px) {

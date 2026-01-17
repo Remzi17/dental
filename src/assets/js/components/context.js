@@ -1,4 +1,3 @@
-import { fadeIn, fadeOut } from "../scripts/ui/animation";
 import { getPageSide, offset, debounce } from "../scripts/core/helpers";
 
 /* 
