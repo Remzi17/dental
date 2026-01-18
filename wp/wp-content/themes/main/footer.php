@@ -336,7 +336,14 @@
 			role: <?=json_encode(is_user_logged_in() ? wp_get_current_user()->roles[0] ?? '' : '')?>
 		}
 
-		const guestData = JSON.parse(localStorage.getItem('comment_guest') || '{}')
+		// const guestData = JSON.parse(localStorage.getItem('comment_guest') || '{}')
+		const guestDataRaw = window.getCookie('comment_guest') || '{}'
+		let guestData = {}
+		try {
+			guestData = JSON.parse(guestDataRaw)
+		} catch {
+			guestData = {}
+		}
 
 		const getCommentId = (commentEl) => {
 			return parseInt(commentEl.id.replace('comment-', ''), 10)
@@ -462,6 +469,9 @@
 			const emailInput = form.querySelector('[name="email"]')
 			const submitButton = form.querySelector('button[type="submit"]')
 
+			console.log(guestData);
+			
+
 			if (currentUser.id) {
 				if (authorInput) authorInput.value = currentUser.name
 				if (emailInput) emailInput.value = currentUser.email
@@ -536,7 +546,7 @@
 							email: formData.get('email') || ''
 						}
 
-						localStorage.setItem('comment_guest', JSON.stringify(guest))
+						window.setCookie('comment_guest', JSON.stringify(guest))
 
 						if (authorInput) authorInput.value = guest.name
 						if (emailInput) emailInput.value = guest.email
@@ -844,12 +854,6 @@
 		// 
 		// Редактирование комментариев
 
-		//
-		//
-		//
-		//
-		// Редактирование комментариев
-
 		const enableEdit = (comment) => {
 			if (comment.classList.contains('is-editing')) return
 
@@ -1017,42 +1021,45 @@
 				const content = popup.querySelector('.popup-comment-history__content')
 
 				content.innerHTML = `
-					<table>
-						<thead>
-							<tr>
-								<th>Редактор</th>
-								<th>Дата</th>
-								<th>Комментарий</th>
-								${can_restore ? '<th></th>' : ''}
-							</tr>
-						</thead>
-						<tbody>
-							${history.map((h, i) => `
+					<div class="table">
+						<table>
+							<thead>
 								<tr>
-									<td>${h.editor_name || 'Гость'}</td>
-									<td>${h.date}</td>
-									<td>${h.text}</td>
-									${can_restore ? `
-										<td>
-											<button
-												class="button button_mini popup-comment-restore"
-												data-comment-id="${h.comment_id}"
-												data-version-index="${i}"
-												type="button">
-												Восстановить
-											</button>
-										</td>
-									` : ''}
+									<th>Редактор</th>
+									<th>Дата</th>
+									<th>Комментарий</th>
+									${can_restore ? '<th></th>' : ''}
 								</tr>
-							`).join('')}
-						</tbody>
-					</table>
+							</thead>
+							<tbody>
+								${history.map((h, i) => `
+									<tr>
+										<td>${h.editor_name || 'Гость'}</td>
+										<td>${h.date}</td>
+										<td>${h.text}</td>
+										${can_restore ? `
+											<td>
+												<button
+													class="button button_mini popup-comment-restore"
+													data-comment-id="${h.comment_id}"
+													data-version-index="${i}"
+													type="button">
+													Восстановить
+												</button>
+											</td>
+										` : ''}
+									</tr>
+								`).join('')}
+							</tbody>
+						</table>
+					</div>
 				`
 
-				fadeIn(popup, true)
+				openModal('popup-comment-history', null, false)
 
-				const restoreBtn = content.querySelector('.popup-comment-restore')
-				if (restoreBtn) restoreBtn.focus()
+				setTimeout(() => {
+					content.querySelector('.table').scrollLeft = 0;
+				}, 10);
 
 			} catch (e) {
 				console.error(e)
@@ -1115,7 +1122,6 @@
 			}
 		});  
 	});
-
 </script>
 
 

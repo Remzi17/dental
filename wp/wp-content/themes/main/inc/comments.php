@@ -312,21 +312,52 @@ add_action('wp_ajax_nopriv_dislike_comment', 'ajax_dislike_comment');
 //
 //
 //
-// Редактирование комментариев
+// Редактирование комментариев и история версий
 
+// Массив всех версий комментария
+function get_comment_edit_history($comment_id) {
+	$history = get_comment_meta($comment_id, 'comment_edit_history', true);
+	return is_array($history) ? $history : [];
+}
+
+// Проверка прав на восстановление и удаление версий комментария
+function can_manage_comment_versions($comment) {
+	if (!$comment) return false;
+
+	if (current_user_can('edit_others_posts')) return true;
+
+	if (is_user_logged_in() && get_current_user_id() === (int) $comment->user_id) {
+		return true;
+	}
+
+	if (!empty($_COOKIE['comment_guest']) && !empty($comment->comment_author_email)) {
+		$guest = json_decode(stripslashes($_COOKIE['comment_guest']), true);
+		if (is_array($guest) && !empty($guest['email'])) {
+			return $guest['email'] === $comment->comment_author_email;
+		}
+	}
+
+	return false;
+}
+
+// Проверка прав на редактирование комментария
 function can_edit_comment($comment) {
 	if (is_user_logged_in()) {
 		if (current_user_can('edit_others_posts')) return true;
 		return get_current_user_id() === (int) $comment->user_id;
 	}
 
-	if (!empty($_COOKIE['guest_email']) && !empty($comment->comment_author_email)) {
-		return $_COOKIE['guest_email'] === $comment->comment_author_email;
+	if (!empty($_COOKIE['comment_guest']) && !empty($comment->comment_author_email)) {
+		$guest = json_decode(stripslashes($_COOKIE['comment_guest']), true);
+		if (is_array($guest) && !empty($guest['email'])) {
+			return $guest['email'] === $comment->comment_author_email;
+		}
 	}
 
 	return false;
 }
 
+// Изменение комментария
 function ajax_edit_comment() {
 	$comment_id = (int) ($_POST['comment_id'] ?? 0);
 	$text = trim($_POST['text'] ?? '');
@@ -336,18 +367,13 @@ function ajax_edit_comment() {
 	}
 
 	$comment = get_comment($comment_id);
-	if (!$comment) {
-		wp_send_json_error('Комментарий не найден');
-	}
+	if (!$comment) wp_send_json_error('Комментарий не найден');
 
 	if (!can_edit_comment($comment)) {
 		wp_send_json_error('Нет прав');
 	}
 
-	$history = get_comment_meta($comment_id, 'comment_edit_history', true);
-	if (!is_array($history)) {
-		$history = [];
-	}
+	$history = get_comment_edit_history($comment_id);
 
 	$history[] = [
 		'text' => $comment->comment_content,
@@ -369,12 +395,15 @@ add_action('wp_ajax_edit_comment', 'ajax_edit_comment');
 add_action('wp_ajax_nopriv_edit_comment', 'ajax_edit_comment');
 
 
+// Получение истории версий комментария 
 function ajax_get_comment_history() {
 	$comment_id = (int) ($_POST['comment_id'] ?? 0);
 	if (!$comment_id) wp_send_json_error('Некорректный ID');
 
-	$history = get_comment_meta($comment_id, 'comment_edit_history', true);
-	if (!is_array($history)) $history = [];
+	$comment = get_comment($comment_id);
+	if (!$comment) wp_send_json_error('Комментарий не найден');
+
+	$history = get_comment_edit_history($comment_id);
 
 	foreach ($history as &$item) {
 		if (!empty($item['editor_id'])) {
@@ -386,33 +415,29 @@ function ajax_get_comment_history() {
 		$item['comment_id'] = $comment_id;
 	}
 
-	$comment = get_comment($comment_id);
-	$can_restore = false;
-
-	if ($comment) {
-		if (current_user_can('edit_others_posts')) {
-			$can_restore = true;
-		} elseif (is_user_logged_in() && get_current_user_id() === (int) $comment->user_id) {
-			$can_restore = true;
-		}
-	}
-
 	wp_send_json_success([
 		'history' => $history,
-		'can_restore' => $can_restore
+		'can_restore' => can_manage_comment_versions($comment)
 	]);
 }
 
 add_action('wp_ajax_get_comment_history', 'ajax_get_comment_history');
 add_action('wp_ajax_nopriv_get_comment_history', 'ajax_get_comment_history');
 
-
+// Восстановление версии комментария
 function ajax_restore_comment_version() {
 	$comment_id = (int) ($_POST['comment_id'] ?? 0);
 	$index = (int) ($_POST['version_index'] ?? -1);
 
-	$history = get_comment_meta($comment_id, 'comment_edit_history', true);
-	if (!is_array($history) || !isset($history[$index])) {
+	$comment = get_comment($comment_id);
+	if (!$comment) wp_send_json_error('Комментарий не найден');
+
+	if (!can_manage_comment_versions($comment)) {
+		wp_send_json_error('Нет прав');
+	}
+
+	$history = get_comment_edit_history($comment_id);
+	if (!isset($history[$index])) {
 		wp_send_json_error('Версия не найдена');
 	}
 
@@ -426,20 +451,25 @@ function ajax_restore_comment_version() {
 
 add_action('wp_ajax_restore_comment_version', 'ajax_restore_comment_version');
 
-
+// Удаление версии комментария
 function ajax_delete_comment_version() {
 	$comment_id = (int) ($_POST['comment_id'] ?? 0);
 	$index = (int) ($_POST['version_index'] ?? -1);
 
-	$history = get_comment_meta($comment_id, 'comment_edit_history', true);
-	if (!is_array($history) || !isset($history[$index])) {
+	$comment = get_comment($comment_id);
+	if (!$comment) wp_send_json_error('Комментарий не найден');
+
+	if (!can_manage_comment_versions($comment)) {
+		wp_send_json_error('Нет прав');
+	}
+
+	$history = get_comment_edit_history($comment_id);
+	if (!isset($history[$index])) {
 		wp_send_json_error('Версия не найдена');
 	}
 
 	unset($history[$index]);
-	$history = array_values($history);
-
-	update_comment_meta($comment_id, 'comment_edit_history', $history);
+	update_comment_meta($comment_id, 'comment_edit_history', array_values($history));
 
 	wp_send_json_success();
 }
@@ -458,7 +488,7 @@ add_action('add_meta_boxes_comment', function($comment) {
 	);
 });
 
-// Функция рендера метабокса
+// Hендер метабокса
 function render_comment_edit_history_meta_box($comment) {
 	$history = get_comment_meta($comment->comment_ID, 'comment_edit_history', true);
 
@@ -483,6 +513,7 @@ function render_comment_edit_history_meta_box($comment) {
 		}
 
 		foreach ($history as $i => $item) {
+			$user = !empty($item['editor_id']) ? get_userdata($item['editor_id']) : null;
 			$editor_name = $user ? ($user->display_name ?: $user->user_nicename) : 'Гость';
 
 			echo '<tr>';

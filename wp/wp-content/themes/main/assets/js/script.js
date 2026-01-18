@@ -372,6 +372,33 @@
 	//
 	//
 	//
+	// Куки
+
+	// Установки куки
+	window.setCookie = (name, value, hours = 24) => {
+	  const expires = new Date(Date.now() + hours * 60 * 60 * 1000).toUTCString();
+	  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; expires=${expires}`;
+	};
+
+	// Получение куки
+	window.getCookie = (name) => {
+	  const cookies = document.cookie.split("; ").reduce((acc, cookie) => {
+	    const [key, value] = cookie.split("=");
+	    acc[key] = decodeURIComponent(value);
+	    return acc;
+	  }, {});
+	  return cookies[name] || null;
+	};
+
+	// Удаление куки
+	window.deleteCookie = (name) => {
+	  document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+	};
+
+	//
+	//
+	//
+	//
 	// Функции для работы со скроллом и скроллбаром
 
 	// Скрытие скроллбара
@@ -1045,40 +1072,42 @@
 		================================================
 	*/
 
+	window.openModal = (popupId, dataTab, addHash = true) => {
+	  const popup = document.getElementById(popupId);
+	  if (!popup) return;
+
+	  // Удалить хеш текущего попапа
+	  if (getHash() && !document.querySelector(`[data-modal][data-modal="${popupId}"]`)?.hasAttribute("data-modal-not-hash")) {
+	    history.pushState("", document.title, (window.location.pathname + window.location.search).replace(getHash(), ""));
+	  }
+
+	  hideScrollbar();
+	  body.classList.add(bodyOpenModalClass);
+
+	  // Добавить хеш нового попапа
+	  if (!window.location.hash.includes(popupId) && !document.querySelector(`[data-modal][data-modal="${popupId}"]`)?.hasAttribute("data-modal-not-hash") && addHash) {
+	    window.location.hash = popupId;
+	  }
+
+	  fadeIn(popup, true);
+
+	  popup.classList.remove("popup_close");
+	  popup.classList.add("popup_open");
+
+	  // открыть таб в попапе
+	  if (dataTab) {
+	    document.querySelector(`[data-href="#${dataTab}"]`)?.click();
+	  }
+	};
+
 	function popup() {
 	  const modalButtons = document.querySelectorAll("[data-modal]");
 	  const popupDialogs = document.querySelectorAll(".popup__dialog");
 
 	  document.querySelectorAll("[data-modal]").forEach((button) => {
-	    button.addEventListener("click", function () {
-	      let [dataModal, dataTab] = button.getAttribute("data-modal").split("#");
-
-	      let popup = document.getElementById(dataModal);
-	      if (!popup) return;
-
-	      // Удалить хеш текущего попапа
-	      if (getHash() && !button.hasAttribute("data-modal-not-hash")) {
-	        history.pushState("", document.title, (window.location.pathname + window.location.search).replace(getHash(), ""));
-	      }
-
-	      hideScrollbar();
-
-	      body.classList.add(bodyOpenModalClass);
-
-	      // Добавить хеш нового попапа
-	      if (!window.location.hash.includes(dataModal) && !button.hasAttribute("data-modal-not-hash")) {
-	        window.location.hash = dataModal;
-	      }
-
-	      fadeIn(popup, true);
-
-	      popup.classList.remove("popup_close");
-	      popup.classList.add("popup_open");
-
-	      // открыть таб в попапе
-	      if (dataTab) {
-	        document.querySelector(`[data-href="#${dataTab}"]`)?.click();
-	      }
+	    button.addEventListener("click", () => {
+	      const [dataModal, dataTab] = button.getAttribute("data-modal").split("#");
+	      openModal(dataModal, dataTab);
 	    });
 	  });
 
@@ -1086,14 +1115,7 @@
 	  window.addEventListener("load", () => {
 	    const hash = window.location.hash.replace("#", "");
 	    if (hash) {
-	      const popup = document.querySelector(`.popup[id="${hash}"]`);
-	      if (popup) {
-	        setTimeout(() => {
-	          hideScrollbar();
-	          popup.classList.add("popup_open");
-	          fadeIn(popup, true);
-	        }, 500);
-	      }
+	      setTimeout(() => openModal(hash), 500);
 	    }
 	  });
 

@@ -60,7 +60,6 @@
 
 		<!-- Контейнер для комментариев -->
 		<div class="comments__wrapper"></div>
-
 		<?
 			get_template_part('parts/comments/comments-template');
 		?>
