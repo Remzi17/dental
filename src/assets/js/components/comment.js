@@ -15,11 +15,6 @@ export function comment() {
   // Общие настройки и данные
 
   const ajaxUrl = window.LIKE_DATA.ajaxUrl;
-
-  const notify = (title = "", text = "", type = "info", autohide = true, interval = 2500) => {
-    new Notify({ title, text, theme: type, autohide, interval });
-  };
-
   const escapeHTML = (value) => {
     if (!value && value !== 0) return "";
     return String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
@@ -56,21 +51,52 @@ export function comment() {
   //
   // Создание DOM комментария
 
-  const createCommentElement = ({ id, author, text, avatar, date = "только что", likes = 0, dislikes = 0, can_delete = false, show_reply = true }) => {
+  const createCommentElement = ({ id, author, text, avatar, date = "только что", time, fulltime, likes = 0, dislikes = 0, can_delete = false, show_reply = true }) => {
     const template = document.querySelector("#comment-template");
     if (!template) return null;
-
     const element = template.content.firstElementChild.cloneNode(true);
     element.id = `comment-${id}`;
 
+    element.querySelector("[itemprop='discussionUrl']").setAttribute("content", `${window.location.href}#${element.id}`);
+    element.querySelector("[itemprop='identifier']").setAttribute("content", element.id);
     element.querySelector("[data-author]").textContent = author;
     element.querySelector("[data-text]").innerHTML = `<p>${text}</p>`;
 
     const avatarEl = element.querySelector("[data-avatar]");
-    if (avatarEl) avatarEl.src = avatar;
+    if (avatarEl) {
+      avatarEl.src = avatar;
+      avatarEl.alt = avatarEl.alt + ` ${author}`;
+
+      if (element.querySelector('[itemprop="image"]')) {
+        element.querySelector('[itemprop="image"]').setAttribute("content", avatar);
+      }
+    }
 
     const dateEl = element.querySelector("[data-date]");
-    if (dateEl) dateEl.textContent = date;
+
+    function getCurrentDateTime(iso = false) {
+      const now = new Date();
+
+      const day = String(now.getDate()).padStart(2, "0");
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const year = now.getFullYear();
+
+      const hours = String(now.getHours()).padStart(2, "0");
+      const minutes = String(now.getMinutes()).padStart(2, "0");
+      const seconds = String(now.getSeconds()).padStart(2, "0");
+
+      if (iso) {
+        return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+      } else {
+        return `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`;
+      }
+    }
+
+    if (dateEl) {
+      dateEl.textContent = date;
+      dateEl.dataset.tooltip = time ? time : getCurrentDateTime();
+      dateEl.setAttribute("datetime", fulltime ? fulltime : getCurrentDateTime(true));
+    }
 
     const commentData = Array.isArray(window.commentsData) ? window.commentsData.find((c) => c.id === id) : null;
 
@@ -304,15 +330,15 @@ export function comment() {
 
     window.commentsData.forEach((comment) => {
       const isOwnComment = comment.is_own || (currentUser.id === 0 && guestData.email && comment.email && guestData.email === comment.email);
-
       const isDeleted = comment.is_deleted;
-
       const element = createCommentElement({
         id: comment.id,
         author: comment.author,
         text: comment.text.replace(/<br\s*\/?>/gi, "\n"),
         avatar: comment.avatar,
         date: comment.date,
+        time: comment.time,
+        fulltime: comment.fulltime,
         likes: comment.likes,
         dislikes: comment.dislikes,
         can_delete: isOwnComment && !isDeleted,

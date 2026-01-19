@@ -731,7 +731,7 @@ add_action('manage_comments_custom_column', function ($column, $comment_id) {
 
 	$reports = get_comment_meta($comment_id, '_comment_reports', true);
 	if (!empty($reports)) {
-		echo '<a href="/wp-admin/comment.php?action=editcomment&c=876#comment_reports"><strong style="color:#d63638;">Жалобы - ' . count($reports) . '</strong></a>';
+		echo "<a href=\"/wp-admin/comment.php?action=editcomment&c=$comment_id#comment_reports\"><strong style=\"color:#d63638;\">Жалобы - " . count($reports) . "</strong></a>";
 	}
 }, 10, 2);
 

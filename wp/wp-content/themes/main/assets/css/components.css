@@ -1544,9 +1544,12 @@ li.menu-item-has-children .sub-menu > li:last-child > a {
 .tooltip {
   position: absolute;
   z-index: 11;
-  padding: 0.75em 1em;
-  background: #f1f1f1;
-  border-radius: 8px;
+  min-width: max-content;
+  padding: 0.25em 0.5em;
+  min-width: 80px;
+  background: var(--gray);
+  border-radius: 0.2857142857em;
+  color: var(--text);
   text-align: center;
   opacity: 0;
   pointer-events: none;
@@ -1554,23 +1557,28 @@ li.menu-item-has-children .sub-menu > li:last-child > a {
 }
 @media (max-width: 1500px) {
   .tooltip {
-    min-width: round(clamp(min(240px, 180px),  168px  +  3.75vw , max(240px, 180px)), 1px);
+    font-size: round(clamp(min(14px, 12px),  11.6px  +  0.125vw , max(14px, 12px)), 1px);
   }
 }
 @media (min-width: 1501px) {
   .tooltip {
-    min-width: 240px;
+    font-size: 14px;
   }
 }
-@media (max-width: 1500px) {
-  .tooltip {
-    font-size: round(clamp(min(16px, 12px),  11.2px  +  0.25vw , max(16px, 12px)), 1px);
-  }
-}
-@media (min-width: 1501px) {
-  .tooltip {
-    font-size: 16px;
-  }
+.tooltip:after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  translate: -50% 100%;
+  content: "";
+  display: block;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  -moz-transform: scale(0.9999);
+  border-width: 8px 6px 0;
+  border-color: var(--gray) transparent transparent transparent;
 }
 .tooltip_active {
   opacity: 1;
@@ -1599,6 +1607,7 @@ li.menu-item-has-children .sub-menu > li:last-child > a {
 }
 .text-block h2 {
   font-weight: 700;
+  line-height: 1.4;
 }
 @media (max-width: 1500px) {
   .text-block h2 {
@@ -1612,6 +1621,7 @@ li.menu-item-has-children .sub-menu > li:last-child > a {
 }
 .text-block h3 {
   font-weight: 600;
+  line-height: 1.4;
 }
 @media (max-width: 1500px) {
   .text-block h3 {

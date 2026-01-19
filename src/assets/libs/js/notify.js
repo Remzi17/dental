@@ -16,21 +16,21 @@ class Notify {
       this._create(),
       this._el.addEventListener("click", (t) => {
         if (t.target.classList.contains("notify__item-close")) {
-          _notifySlideUp(this._el, 200);
+          notifySlideUp(this._el, 200);
           setTimeout(() => {
             this._hide();
           }, 200);
         }
       }),
       this._show(),
-      _notifySlideDown(this._el, 500);
+      notifySlideDown(this._el, 500);
   }
   _show() {
     this._el.classList.add("notify__item-show"),
       this._autohide &&
         setTimeout(() => {
           if (this._autohide == true || this._autohide.toLowerCase() == "true") {
-            _notifySlideUp(this._el, 300);
+            notifySlideUp(this._el, 300);
             setTimeout(() => {
               this._hide();
             }, 400);
@@ -78,7 +78,7 @@ class Notify {
 }
 
 // Плавно скрыть с анимацией слайда
-const _notifySlideUp = (target, duration = 400, showmore = 0) => {
+const notifySlideUp = (target, duration = 400, showmore = 0) => {
   if (target && !target.classList.contains("_slide")) {
     target.classList.add("_slide");
     target.style.transitionProperty = "height, margin, padding";
@@ -112,59 +112,59 @@ const _notifySlideUp = (target, duration = 400, showmore = 0) => {
 };
 
 // Плавно показать с анимацией слайда
-const _notifySlideDown = (target, duration = 400) => {
-  if (target && !target.classList.contains("_slide")) {
-    target.style.removeProperty("display");
-    let display = window.getComputedStyle(target).display;
-    if (display === "none") display = "block";
-    target.style.display = display;
-    let height = target.offsetHeight;
-    target.style.overflow = "hidden";
-    target.style.height = 0;
-    target.style.paddingBLock = 0;
-    target.style.marginBlock = 0;
-    target.offsetHeight;
-    target.style.transitionProperty = "height, margin, padding";
-    target.style.transitionDuration = duration + "ms";
-    target.style.height = height + "px";
-    target.style.removeProperty("padding-top");
-    target.style.removeProperty("padding-bottom");
-    target.style.removeProperty("margin-top");
-    target.style.removeProperty("margin-bottom");
-    window.setTimeout(() => {
-      target.style.removeProperty("height");
-      target.style.removeProperty("overflow");
-      target.style.removeProperty("transition-duration");
-      target.style.removeProperty("transition-property");
-    }, duration);
-  }
+const notifySlideDown = (el, duration = 400) => {
+  if (!el || el.classList.contains("_slide")) return;
+
+  el.classList.add("_slide");
+  el.style.removeProperty("display");
+  const display = getComputedStyle(el).display === "none" ? "block" : getComputedStyle(el).display;
+  el.style.display = display;
+  const height = el.offsetHeight;
+  el.style.overflow = "hidden";
+  el.style.height = "0";
+  el.style.paddingBlock = "0";
+  el.style.marginBlock = "0";
+  el.offsetHeight;
+  el.style.transition = `height ${duration}ms, margin ${duration}ms, padding ${duration}ms`;
+  el.style.height = `${height}px`;
+  el.style.removeProperty("padding-top");
+  el.style.removeProperty("padding-bottom");
+  el.style.removeProperty("margin-top");
+  el.style.removeProperty("margin-bottom");
+  setTimeout(() => {
+    el.style.removeProperty("height");
+    el.style.removeProperty("overflow");
+    el.style.removeProperty("transition");
+    el.classList.remove("_slide");
+  }, duration);
 };
 
-let notifyItems = document.querySelectorAll("[data-notify]");
+const parseNotifyData = (value = "") => {
+  const [title = "", text = "", theme = "info", autohide = "true", interval = "2500"] = value.split(",");
 
-notifyItems.forEach((item) => {
-  item.addEventListener("click", function () {
-    initNotify(item);
-  });
-});
-
-function initNotify(item) {
-  let title = item.getAttribute("data-notify").split(",")[0];
-  let text = item.getAttribute("data-notify").split(",")[1];
-  let theme = item.getAttribute("data-notify").split(",")[2] ? item.getAttribute("data-notify").split(",")[2] : "";
-  let autohide = item.getAttribute("data-notify").split(",")[3] ? item.getAttribute("data-notify").split(",")[3] : "true";
-
-  let interval = item.getAttribute("data-notify").split(",")[4] ? item.getAttribute("data-notify").split(",")[4] : "2000";
-
-  new Notify({
+  return {
     title: title.trim(),
     text: text.trim(),
     theme: theme.trim(),
-    autohide: autohide,
-    interval: interval,
-  });
-}
+    autohide: autohide.trim() !== "false",
+    interval: Number(interval) || 2500,
+  };
+};
 
-document.querySelectorAll("[data-notify-default]").forEach((item) => {
-  initNotify(item);
+const initNotify = (el) => {
+  if (!el?.dataset.notify) return;
+  new Notify(parseNotifyData(el.dataset.notify));
+};
+
+document.addEventListener("click", (e) => {
+  const target = e.target.closest("[data-notify]");
+  if (!target) return;
+
+  initNotify(target);
 });
+
+document.querySelectorAll("[data-notify-default]").forEach(initNotify);
+
+const notify = (title = "", text = "", theme = "info", autohide = true, interval = 2500) => {
+  new Notify({ title, text, theme, autohide, interval });
+};

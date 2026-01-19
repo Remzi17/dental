@@ -70,7 +70,7 @@ function get_reviews_count($post_id) {
 }
 
 // Умный вывод даты 
-function get_smart_date($date_string = '') {
+function get_smart_date($date_string = '', $full_format = false) {
 	if (empty($date_string)) {
 		$timestamp = get_the_time('U');
 	} else {
@@ -80,9 +80,13 @@ function get_smart_date($date_string = '') {
 	$current_time = current_time('timestamp');
 	$diff = $current_time - $timestamp;
 
+	if ($full_format === true) {
+		return date('d.m.Y H:i:s', $timestamp); 
+	}
+
 	if ($diff < HOUR_IN_SECONDS) {
 		$minutes = round($diff / MINUTE_IN_SECONDS);
-		return $minutes <= 1 ? 'только что' : $minutes . ' ' . get_word($minutes, array('минуту', 'минуты', 'минут')) . ' назад';
+		return $minutes <= 1 ? 'только что' : $minutes . ' ' . get_word($minutes, ['минуту', 'минуты', 'минут']) . ' назад';
 	}
 
 	if (date('Y-m-d', $timestamp) == date('Y-m-d', $current_time)) {
@@ -92,12 +96,12 @@ function get_smart_date($date_string = '') {
 	if (date('Y-m-d', $timestamp) == date('Y-m-d', $current_time - DAY_IN_SECONDS)) {
 		return 'Вчера в ' . date('H:i', $timestamp);
 	}
-  
+
 	$day = date('j', $timestamp);
 	$month = date('n', $timestamp);
 	$year = date('Y', $timestamp);
-  
-	$month_names = array(
+
+	$month_names = [
 		1 => 'января',
 		2 => 'февраля', 
 		3 => 'марта',
@@ -110,8 +114,8 @@ function get_smart_date($date_string = '') {
 		10 => 'октября',
 		11 => 'ноября',
 		12 => 'декабря'
-	);
-    
+	];
+
 	return $day . ' ' . $month_names[$month] . ' ' . $year;
 }
 

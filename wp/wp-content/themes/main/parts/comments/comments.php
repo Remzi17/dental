@@ -66,7 +66,6 @@
 
 		<script>
 			window.commentsData = <?= json_encode(array_map(function($c) {
-
 				$user_id = get_current_user_id();
 				$avatar = '';
 
@@ -80,7 +79,6 @@
 				}
 
 				$is_deleted = (wp_get_comment_status($c) === 'trash');
-
 				$reactions = get_comment_reactions_cookie();
 				$is_own_like = !empty($reactions[$c->comment_ID]['like']);
 				$is_own_dislike = !empty($reactions[$c->comment_ID]['dislike']);
@@ -93,6 +91,8 @@
 					'avatar' => $avatar,
 					'text' => $is_deleted ? 'Комментарий удален' : $c->comment_content,
 					'date' => get_smart_date($c->comment_date),
+					'time' => get_smart_date($c->comment_date, true),
+					'fulltime' => $c->comment_date,
 					'parent' => (int)$c->comment_parent,
 					'likes' => get_comment_likes_count($c->comment_ID),
 					'dislikes' => get_comment_dislikes_count($c->comment_ID),
@@ -112,7 +112,7 @@
 				$approved = get_comments([
 					'post_id' => $post_id,
 					'status'  => 'approve',
-					'order'   => 'ASC',
+					'order'   => 'DESC',
 				]);
 
 				// Удалённые комментарии, у которых есть ответы

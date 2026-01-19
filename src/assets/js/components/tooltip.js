@@ -30,7 +30,7 @@ export function tooltip() {
           text = item.getAttribute("data-tooltip");
         }
 
-        tooltip = document.createElement("div");
+        tooltip = document.createElement("span");
         tooltip.className = "tooltip";
         tooltip.textContent = text;
         item.append(tooltip);

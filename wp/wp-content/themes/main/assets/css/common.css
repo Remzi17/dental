@@ -395,6 +395,7 @@
   height: 100%;
   overflow: hidden;
   background: color-mix(in srgb, var(--active) 40%, transparent 60%);
+  backdrop-filter: blur(8px);
 }
 .modal_open .modal__content {
   animation: modal-open 0.4s ease forwards;
@@ -1679,6 +1680,7 @@ body {
 
 .title {
   font-weight: 700;
+  line-height: 1.4;
 }
 @media (max-width: 1500px) {
   .title {
@@ -1695,6 +1697,7 @@ body {
 }
 .title-2 {
   font-weight: 700;
+  line-height: 1.4;
 }
 @media (max-width: 1500px) {
   .title-2 {
@@ -1708,6 +1711,7 @@ body {
 }
 .title-3 {
   font-weight: 600;
+  line-height: 1.4;
 }
 @media (max-width: 1500px) {
   .title-3 {
