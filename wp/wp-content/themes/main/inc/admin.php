@@ -107,6 +107,12 @@ function adminStyles() {
 			top: 50% !important;
 		}
 
+
+		.editcomment tbody {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr)
+		}
+
 	</style>';
 	
 	echo "

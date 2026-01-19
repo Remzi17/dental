@@ -1,5 +1,5 @@
 import { dataMediaQueries } from "../scripts/core/checks";
-import { _slideToggle, _slideUp } from "../scripts/ui/animation";
+import { slideToggle, slideUp } from "../scripts/ui/animation";
 
 /* 
 	================================================
@@ -75,7 +75,7 @@ export function spoller() {
 
         titleEl.classList.toggle("active");
 
-        _slideToggle(contentEl, speed);
+        slideToggle(contentEl, speed);
 
         if (itemEl.hasAttribute("data-spoller-scroll") && titleEl.classList.contains("active")) {
           const scrollOffset = parseInt(itemEl.dataset.spollerScroll) || 0;
@@ -97,7 +97,7 @@ export function spoller() {
 
         if (block.classList.contains("_spoller-init")) {
           title.classList.remove("active");
-          _slideUp(content, speed);
+          slideUp(content, speed);
         }
       });
     }
@@ -111,6 +111,6 @@ export function spoller() {
     const speed = parseInt(block.dataset.spollersSpeed) || 400;
 
     activeTitle.classList.remove("active");
-    _slideUp(content, speed);
+    slideUp(content, speed);
   }
 }

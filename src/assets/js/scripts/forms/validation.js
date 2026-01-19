@@ -123,21 +123,21 @@ document.querySelectorAll("form").forEach(initFormValidation);
 
 // После отправки формы
 export function successSubmitForm(form) {
-  let popupInterval = 1500;
+  let modalInterval = 1500;
 
-  fadeOut(".popup");
-
-  setTimeout(() => {
-    fadeIn(".popup-thank");
-  }, popupInterval - 500);
+  fadeOut(".modal");
 
   setTimeout(() => {
-    fadeOut(".popup");
-  }, popupInterval * 2);
+    fadeIn(".modal-thank");
+  }, modalInterval - 500);
+
+  setTimeout(() => {
+    fadeOut(".modal");
+  }, modalInterval * 2);
 
   setTimeout(() => {
     body.classList.remove("no-scroll");
-  }, popupInterval * 3);
+  }, modalInterval * 3);
 
   form.reset();
   form.querySelectorAll("[data-original-placeholder]").forEach((input) => {

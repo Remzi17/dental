@@ -13,19 +13,19 @@
 							<use xlink:href="<?=get_template_directory_uri()?>/assets/img/sprite.svg?ver=<?=spriteVersion()?>#dots"></use>
 						</svg>
 					</button>
-					<div class="context-menu__list" data-context-menu>
+					<div class="context-menu__list" data-context-menu data-tab-focus=".context-menu__button,.active">
 						<button class="context-menu__item" type="button" data-comment-edit>Редактировать</button>
 						<button class="context-menu__item" type="button" data-comment-history>История версий</button>
 						<button class="context-menu__item" type="button">Поделиться</button>
-						<button class="context-menu__item" type="button">Пожаловаться</button>
+						<button class="context-menu__item" type="button" data-comment-report>Пожаловаться</button>
 					</div>
 				</div>
 			</div>
 			<div class="comment__text" itemprop="text" data-text contenteditable="false">
 				<p></p>
 			</div>
-			<div class="section-bottom comment__edit-actions hidden" data-comment-edit-actions>
-				<div class="flex">
+			<div class="comment__edit-actions" data-comment-edit-actions>
+				<div class="flex" data-tab-focus=".comment__edit-actions,.active">
 					<button class="button button_small button_border" type="button" data-cancel-edit>Отменить</button>
 					<button class="button button_small" type="button" data-save-edit>Сохранить</button>
 				</div>

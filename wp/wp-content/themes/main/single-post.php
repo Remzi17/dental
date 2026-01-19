@@ -124,7 +124,7 @@
 
 										<div class="buttons doctor__item-buttons">
 											<a href="<?=esc_url($author_url); ?>" class="button button_border">Подробнее</a>
-											<button class="button" type="button" data-modal="popup-call">Записаться</button>
+											<button class="button" type="button" data-modal="modal-call">Записаться</button>
 										</div>
 									</div>
 								</div>

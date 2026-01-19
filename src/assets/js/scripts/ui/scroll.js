@@ -1,4 +1,5 @@
 import { haveScroll } from "../core/checks";
+import { body, bodyOpenModalClass } from "../variables";
 import { changeScrollbarGutter } from "./scrollbar";
 
 // Добавление прокрутки мышью для горизонтальных блоков
@@ -129,7 +130,7 @@ class ZoomDetector {
 const zoomDetector = new ZoomDetector();
 
 window.addEventListener("zoomchange", (e) => {
-  if (haveScroll()) {
+  if (haveScroll() && body.classList.contains(bodyOpenModalClass)) {
     changeScrollbarGutter(false);
   }
 });

@@ -386,7 +386,7 @@
   background-image: url(../img/icons/password-show.svg);
 }
 
-.popup {
+.modal {
   position: fixed;
   inset: 0;
   z-index: 10;
@@ -396,13 +396,13 @@
   overflow: hidden;
   background: color-mix(in srgb, var(--active) 40%, transparent 60%);
 }
-.popup_open .popup__content {
-  animation: popup-open 0.4s ease forwards;
+.modal_open .modal__content {
+  animation: modal-open 0.4s ease forwards;
 }
-.popup_close .popup__content {
-  animation: popup-close 0.4s ease forwards;
+.modal_close .modal__content {
+  animation: modal-close 0.4s ease forwards;
 }
-.popup__dialog {
+.modal__dialog {
   width: 100%;
   height: 100%;
   display: flex;
@@ -411,7 +411,7 @@
   align-items: center;
   cursor: pointer;
 }
-.popup__content {
+.modal__content {
   position: relative;
   max-height: 90vh;
   padding-right: 9px;
@@ -424,53 +424,53 @@
   transition: all 0.4s;
 }
 @media (max-width: 1500px) {
-  .popup__content {
+  .modal__content {
     padding-block: round(clamp(min(40px, 20px),  16px  +  1.25vw , max(40px, 20px)), 1px);
   }
 }
 @media (min-width: 1501px) {
-  .popup__content {
+  .modal__content {
     padding-block: 40px;
   }
 }
 @media (max-width: 1500px) {
-  .popup__content {
+  .modal__content {
     padding-inline: round(clamp(min(60px, 16px),  7.2px  +  2.75vw , max(60px, 16px)), 1px);
   }
 }
 @media (min-width: 1501px) {
-  .popup__content {
+  .modal__content {
     padding-inline: 60px;
   }
 }
 @supports (-moz-appearance: none) {
-  .popup__content {
+  .modal__content {
     scrollbar-color: #23da85 #f1f1f1;
     scrollbar-width: thin;
   }
 }
-.popup__content::-webkit-scrollbar {
+.modal__content::-webkit-scrollbar {
   width: 4px;
 }
-.popup__content::-webkit-scrollbar-track-piece {
+.modal__content::-webkit-scrollbar-track-piece {
   background-color: #f1f1f1;
   border-radius: 4px;
 }
-.popup__content::-webkit-scrollbar-thumb {
+.modal__content::-webkit-scrollbar-thumb {
   background-color: #23da85;
   border-radius: 4px;
 }
 @media (max-width: 1500px) {
-  .popup__content {
+  .modal__content {
     border-radius: round(clamp(min(20px, 16px),  15.2px  +  0.25vw , max(20px, 16px)), 1px);
   }
 }
 @media (min-width: 1501px) {
-  .popup__content {
+  .modal__content {
     border-radius: 20px;
   }
 }
-@keyframes popup-open {
+@keyframes modal-open {
   from {
     opacity: 0;
     translate: 0 -24px;
@@ -480,7 +480,7 @@
     translate: 0 0;
   }
 }
-@keyframes popup-close {
+@keyframes modal-close {
   from {
     opacity: 1;
     translate: 0 0;
@@ -490,31 +490,31 @@
     translate: 0 -24px;
   }
 }
-.popup__content-auto-width {
+.modal__content-auto-width {
   width: auto;
 }
-.popup__title {
+.modal__title {
   text-align: center;
 }
 @media (max-width: 1500px) {
-  .popup__title {
+  .modal__title {
     margin-bottom: round(clamp(min(16px, 12px),  11.2px  +  0.25vw , max(16px, 12px)), 1px);
   }
 }
 @media (min-width: 1501px) {
-  .popup__title {
+  .modal__title {
     margin-bottom: 16px;
   }
 }
-.popup__form form {
+.modal__form form {
   display: grid;
   justify-content: center;
   grid-template-columns: 100%;
 }
-.popup__form .input-wrapper {
+.modal__form .input-wrapper {
   gap: 12px;
 }
-.popup__close {
+.modal__close {
   position: absolute;
   z-index: 4;
   display: flex;
@@ -522,94 +522,94 @@
   transition: all 0.4s;
 }
 @media (max-width: 1500px) {
-  .popup__close {
+  .modal__close {
     right: round(clamp(min(16px, 12px),  11.2px  +  0.25vw , max(16px, 12px)), 1px);
   }
 }
 @media (min-width: 1501px) {
-  .popup__close {
+  .modal__close {
     right: 16px;
   }
 }
 @media (max-width: 1500px) {
-  .popup__close {
+  .modal__close {
     top: round(clamp(min(16px, 12px),  11.2px  +  0.25vw , max(16px, 12px)), 1px);
   }
 }
 @media (min-width: 1501px) {
-  .popup__close {
+  .modal__close {
     top: 16px;
   }
 }
-.popup__close svg {
+.modal__close svg {
   width: 20px;
   height: 20px;
   fill: var(--gray_dark);
 }
 @media (any-hover: hover) {
-  .popup__close svg:hover {
+  .modal__close svg:hover {
     fill: var(--active);
   }
 }
-.popup-thank .popup__content {
+.modal-thank .modal__content {
   display: grid;
   min-width: 280px;
   justify-items: center;
   background: #fff;
 }
 @media (max-width: 1500px) {
-  .popup-thank .popup__content {
+  .modal-thank .modal__content {
     gap: round(clamp(min(20px, 12px),  10.4px  +  0.5vw , max(20px, 12px)), 1px);
   }
 }
 @media (min-width: 1501px) {
-  .popup-thank .popup__content {
+  .modal-thank .modal__content {
     gap: 20px;
   }
 }
-.popup-thank .popup__title, .popup-thank .popup__subtitle {
+.modal-thank .modal__title, .modal-thank .modal__subtitle {
   margin: 0;
 }
 @media (max-width: 1500px) {
-  .popup-thank img {
+  .modal-thank img {
     width: round(clamp(min(100px, 60px),  52px  +  2.5vw , max(100px, 60px)), 1px);
   }
 }
 @media (min-width: 1501px) {
-  .popup-thank img {
+  .modal-thank img {
     width: 100px;
   }
 }
 @media (max-width: 1500px) {
-  .popup-thank img {
+  .modal-thank img {
     height: round(clamp(min(100px, 60px),  52px  +  2.5vw , max(100px, 60px)), 1px);
   }
 }
 @media (min-width: 1501px) {
-  .popup-thank img {
+  .modal-thank img {
     height: 100px;
   }
 }
 @media (max-width: 575px) {
-  .popup-comment-history .popup-comment-history__content table {
+  .modal-comment-history .modal-comment-history__content table {
     font-size: 12px;
   }
 }
-.popup-comment-history .popup-comment-history__content tbody tr > *:nth-child(3) {
+.modal-comment-history .modal-comment-history__content tbody tr > *:nth-child(3) {
   display: inline-block;
 }
 @media (max-width: 1500px) {
-  .popup-comment-history .popup-comment-history__content tbody tr > *:nth-child(3) {
+  .modal-comment-history .modal-comment-history__content tbody tr > *:nth-child(3) {
     width: round(clamp(min(400px, 200px),  160px  +  12.5vw , max(400px, 200px)), 1px);
   }
 }
 @media (min-width: 1501px) {
-  .popup-comment-history .popup-comment-history__content tbody tr > *:nth-child(3) {
+  .modal-comment-history .modal-comment-history__content tbody tr > *:nth-child(3) {
     width: 400px;
   }
 }
 @media (max-width: 575px) {
-  .popup__dialog {
+  .modal__dialog {
     padding: 0 12px;
     margin-inline: auto;
   }

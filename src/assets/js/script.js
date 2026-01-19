@@ -224,8 +224,8 @@ if (document.querySelector(".feedback-container")) {
 
 // Читать полностью в отзывах
 const feedbackWrapper = document.querySelector(".feedback .swiper-wrapper");
-const popupReviews = document.querySelector(".popup-reviews");
-const popupContent = popupReviews.querySelector(".popup-reviews__wrapper");
+const modalReviews = document.querySelector(".modal-reviews");
+const modalContent = modalReviews.querySelector(".modal-reviews__wrapper");
 
 if (feedbackWrapper) {
   feedbackWrapper.addEventListener("click", (e) => {
@@ -234,7 +234,88 @@ if (feedbackWrapper) {
 
     const feedbackItem = feedbackButton.closest(".feedback__item");
 
-    popupContent.innerHTML = "";
-    popupContent.insertAdjacentHTML("beforeend", feedbackItem.outerHTML);
+    modalContent.innerHTML = "";
+    modalContent.insertAdjacentHTML("beforeend", feedbackItem.outerHTML);
   });
 }
+
+// фокус
+(() => {
+  const FOCUSABLE = `
+    a[href],
+    button,
+    input,
+    textarea,
+    select,
+    [tabindex]:not([tabindex="-1"])
+  `.trim();
+
+  const isActiveByRule = (container) => {
+    const rule = container.dataset.tabFocus;
+    if (!rule) return false;
+
+    let [targetSelector, activeClass] = rule.split(",").map((s) => s.trim());
+    if (!targetSelector || !activeClass) return false;
+
+    activeClass = activeClass.replace(".", "");
+
+    const context = container.closest("[data-context]") || document;
+    const target = context.querySelector(targetSelector);
+    const hasClass = (el) => el?.classList?.contains(activeClass);
+    const result = hasClass(target) || hasClass(container) || hasClass(context);
+
+    return result;
+  };
+
+  const update = (container, reason = "") => {
+    const active = isActiveByRule(container);
+
+    container.querySelectorAll(FOCUSABLE).forEach((el) => {
+      if (active) {
+        if (el.__tabindexSaved !== undefined) {
+          el.setAttribute("tabindex", el.__tabindexSaved);
+          delete el.__tabindexSaved;
+        } else {
+          el.removeAttribute("tabindex");
+        }
+      } else {
+        if (el.__tabindexSaved === undefined) {
+          el.__tabindexSaved = el.getAttribute("tabindex");
+        }
+        el.setAttribute("tabindex", "-1");
+      }
+    });
+  };
+
+  const updateAll = (reason = "") => {
+    document.querySelectorAll("[data-tab-focus]").forEach((el) => update(el, reason));
+  };
+
+  /* ---------- observers ---------- */
+  new MutationObserver(() => updateAll("mutation")).observe(document.documentElement, {
+    attributes: true,
+    subtree: true,
+    attributeFilter: ["class"],
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      requestAnimationFrame(() => updateAll("enter/space"));
+    }
+
+    if (e.key === "Tab") {
+      updateAll("before tab");
+    }
+  });
+
+  document.addEventListener("DOMContentLoaded", () => updateAll("init"));
+})();
+
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Tab") return;
+
+  // Ждём, пока браузер сменит фокус
+  setTimeout(() => {
+    const el = document.activeElement;
+  }, 0);
+});

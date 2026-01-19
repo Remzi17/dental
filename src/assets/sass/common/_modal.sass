@@ -7,7 +7,7 @@ $close-size: 20
 $close-offset: 16
 $close-color: var(--gray_dark) 
 
-.popup 
+.modal 
 	position: fixed
 	inset: 0
 	z-index: 10
@@ -20,12 +20,12 @@ $close-color: var(--gray_dark)
 	background: tran(var(--active), 60)
 
 	&_open 
-		.popup__content
-			animation: popup-open 0.4s ease forwards
+		.modal__content
+			animation: modal-open .4s ease forwards
 
 	&_close
-		.popup__content
-			animation: popup-close 0.4s ease forwards
+		.modal__content
+			animation: modal-close .4s ease forwards
 
 	&__dialog 
 		width: 100%
@@ -53,7 +53,7 @@ $close-color: var(--gray_dark)
 		cursor: default
 		+t
 
-		@keyframes popup-open 
+		@keyframes modal-open 
 			from 
 				opacity: 0
 				translate: 0 -24px
@@ -62,7 +62,7 @@ $close-color: var(--gray_dark)
 				opacity: 1
 				translate: 0 0
 
-		@keyframes popup-close 
+		@keyframes modal-close 
 			from 
 				opacity: 1
 				translate: 0 0
@@ -108,7 +108,7 @@ $close-color: var(--gray_dark)
 					fill: var(--active)
 
 	&-thank 
-		.popup
+		.modal
 			&__content 
 				display: grid
 				+adap('gap', 20, 12)
@@ -125,7 +125,7 @@ $close-color: var(--gray_dark)
 			+adap('height', 100, 60)
 
 	&-comment-history
-		.popup-comment-history 
+		.modal-comment-history 
 			&__content 
 				table
 					@media (max-width: 575px)

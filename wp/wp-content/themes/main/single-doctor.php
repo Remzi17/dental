@@ -43,7 +43,7 @@
 					<div class="tag">Стоматолог-терапевт</div>
 				</div>
 				<div class="single-doctor__exp">Стаж: <span><?=$experience_years . ' ' . $experience_text?></span></div>
-				<button class="button" type="button" data-modal="popup-call">Записаться</button>
+				<button class="button" type="button" data-modal="modal-call">Записаться</button>
 			</div>
 		</div>
 	</div>
@@ -142,7 +142,7 @@
 							<div class="swiper-pagination slider__pagination feedback__pagination"></div>
 						</div>
 
-						<button class="button button-more" type="button" data-modal="popup-feedback">Оставить отзыв</button>
+						<button class="button button-more" type="button" data-modal="modal-feedback">Оставить отзыв</button>
 					</div>
 				</div>
 			</div>

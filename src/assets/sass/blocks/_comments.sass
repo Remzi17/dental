@@ -141,6 +141,21 @@
 	&__content 
 		position: relative
 
+	&__edit 
+		&-actions 
+			opacity: 0
+			translate: 0 -20px
+			+t
+			height: 0
+			min-height: 1px
+			pointer-events: none
+
+			&.active 
+				margin-bottom: 8px
+				height: auto
+				opacity: 1
+				translate: 0 0
+				pointer-events: auto
 
 
 

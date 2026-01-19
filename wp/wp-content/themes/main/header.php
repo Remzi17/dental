@@ -105,7 +105,7 @@
 							</a>
 						</div>
 						<div class="header__buttons" data-da=".header__mobile,991,3">
-							<button class="button button_orange" type="button" data-modal="popup-call">Связаться с нами</button>
+							<button class="button button_orange" type="button" data-modal="modal-call">Связаться с нами</button>
 						</div>
 						<button class="menu-link">
 							<span class="menu-lines"></span>

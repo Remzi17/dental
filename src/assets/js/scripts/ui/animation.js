@@ -9,10 +9,12 @@ import { isHidden } from "../core/checks";
 const fadeTokens = new WeakMap();
 
 // Плавное появление
-window.fadeIn = (el, isItem = false, display, timeout = 400) => {
+export const fadeIn = (el, display = "block", timeout = 400) => {
   document.body.classList.add("_fade");
-  let elements = isItem ? el : document.querySelectorAll(el);
-  if (!elements.length) elements = [el];
+
+  const elements = el instanceof Element ? [el] : document.querySelectorAll(el);
+
+  if (!elements.length) return;
 
   elements.forEach((element) => {
     const token = Symbol();
@@ -20,7 +22,7 @@ window.fadeIn = (el, isItem = false, display, timeout = 400) => {
 
     element.style.transition = "none";
     element.style.opacity = 0;
-    element.style.display = display || "block";
+    element.style.display = display;
     element.style.transition = `opacity ${timeout}ms`;
 
     setTimeout(() => {
@@ -36,10 +38,12 @@ window.fadeIn = (el, isItem = false, display, timeout = 400) => {
 };
 
 // Плавное исчезновение
-window.fadeOut = (el, isItem = false, timeout = 400) => {
+export const fadeOut = (el, timeout = 400) => {
   document.body.classList.add("_fade");
-  let elements = isItem ? el : document.querySelectorAll(el);
-  if (!elements.length) elements = [el];
+
+  const elements = el instanceof Element ? [el] : document.querySelectorAll(el);
+
+  if (!elements.length) return;
 
   elements.forEach((element) => {
     const token = Symbol();
@@ -68,7 +72,7 @@ window.fadeOut = (el, isItem = false, timeout = 400) => {
 };
 
 // Плавно скрыть с анимацией слайда
-export const _slideUp = (target, duration = 400, showmore = 0) => {
+export const slideUp = (target, duration = 400, showmore = 0) => {
   if (target && !target.classList.contains("_slide")) {
     target.classList.add("_slide");
     target.style.transitionProperty = "height, margin, padding";
@@ -102,7 +106,7 @@ export const _slideUp = (target, duration = 400, showmore = 0) => {
 };
 
 // Плавно показать с анимацией слайда
-export const _slideDown = (target, duration = 400) => {
+export const slideDown = (target, duration = 400) => {
   if (target && !target.classList.contains("_slide")) {
     target.style.removeProperty("display");
     let display = window.getComputedStyle(target).display;
@@ -130,11 +134,11 @@ export const _slideDown = (target, duration = 400) => {
   }
 };
 
-// Плавно изменить состояние между _slideUp и _slideDown
-export const _slideToggle = (target, duration = 400) => {
+// Плавно изменить состояние между slideUp и slideDown
+export const slideToggle = (target, duration = 400) => {
   if (target && isHidden(target)) {
-    return _slideDown(target, duration);
+    return slideDown(target, duration);
   } else {
-    return _slideUp(target, duration);
+    return slideUp(target, duration);
   }
 };

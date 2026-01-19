@@ -55,7 +55,7 @@ export function context() {
 
     menu.classList.toggle("active");
 
-    context.classList.add("_context-active");
+    context.classList.add("active");
     activeContext = context;
   };
 
@@ -66,7 +66,7 @@ export function context() {
     if (!menu) return;
 
     menu.classList.remove("active");
-    context.classList.remove("_context-active");
+    context.classList.remove("active");
 
     if (activeContext === context) {
       activeContext = null;
@@ -77,7 +77,7 @@ export function context() {
   };
 
   const toggleMenu = (context) => {
-    context.classList.contains("_context-active") ? closeMenu(context) : openMenu(context);
+    context.classList.contains("active") ? closeMenu(context) : openMenu(context);
   };
 
   document.addEventListener("click", (e) => {
@@ -115,7 +115,7 @@ export function context() {
   });
 
   const repositionAllMenus = () => {
-    document.querySelectorAll("[data-context]._context-active").forEach((context) => {
+    document.querySelectorAll("[data-context].active").forEach((context) => {
       const menu = context.querySelector("[data-context-menu]");
       if (menu) positionMenu(context, menu);
     });

@@ -1,7 +1,7 @@
 import { debounce } from "../scripts/core/helpers";
 import { isDesktop } from "../scripts/ui/browser";
 import { offset } from "../scripts/core/helpers";
-import { _slideDown, _slideUp } from "../scripts/ui/animation";
+import { slideDown, slideUp } from "../scripts/ui/animation";
 import { windowWidth } from "../scripts/variables";
 
 /* 
@@ -183,11 +183,11 @@ export function subMenu() {
           if (!item.classList.contains("active")) {
             item.classList.add("active");
             item.parentElement.nextElementSibling.classList.add("active");
-            _slideDown(item.parentElement.nextElementSibling, 200);
+            slideDown(item.parentElement.nextElementSibling, 200);
           } else {
             item.classList.remove("active");
             item.parentElement.nextElementSibling.classList.remove("remove");
-            _slideUp(item.parentElement.nextElementSibling, 200);
+            slideUp(item.parentElement.nextElementSibling, 200);
           }
 
           setTimeout(() => {

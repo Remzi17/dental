@@ -141,7 +141,9 @@
 				id: <?=get_current_user_id()?>,
 				name: <?=json_encode(is_user_logged_in() ? wp_get_current_user()->display_name : '')?>,
 				email: <?=json_encode(is_user_logged_in() ? wp_get_current_user()->user_email : '')?>,
-				role: <?=json_encode(is_user_logged_in() ? wp_get_current_user()->roles[0] : '')?>
+				role: <?=json_encode(is_user_logged_in() ? wp_get_current_user()->roles[0] : '')?>,
+				avatar: <?=get_current_user_id()?> ? '<?=get_field('аватар', 'user_' . get_current_user_id())['sizes']['thumbnail']?>': 
+				'<?=get_avatar_url("", ["size"=>64])?>',
 			}
 		</script>
 	</div>

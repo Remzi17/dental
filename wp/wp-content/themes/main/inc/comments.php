@@ -480,7 +480,7 @@ add_action('wp_ajax_delete_comment_version', 'ajax_delete_comment_version');
 add_action('add_meta_boxes_comment', function($comment) {
 	add_meta_box(
 		'comment_edit_history',
-		'История версий комментария',
+		'История версий',
 		'render_comment_edit_history_meta_box',
 		'comment',
 		'normal',
@@ -520,9 +520,9 @@ function render_comment_edit_history_meta_box($comment) {
 			echo '<td style="border:1px solid #ddd; padding: 8px">' . esc_html($editor_name) . '</td>';
 			echo '<td style="border:1px solid #ddd; padding: 8px">' . esc_html($item['date']) . '</td>';
 			echo '<td style="border:1px solid #ddd; padding: 8px">' . wp_kses_post($item['text']) . '</td>';
-			echo '<td style="border:1px solid #ddd; padding: 8px; display: flex; gap: 4px;">';
-			echo '<button class="button button-primary restore-version-admin" type="button" data-comment-id="' . esc_attr($comment->comment_ID) . '" data-version-index="' . esc_attr($i) . '">Восстановить</button>';
-			echo '<button class="button delete-version-admin" type="button" data-comment-id="' . esc_attr($comment->comment_ID) . '" data-version-index="' . esc_attr($i) . '">Удалить</button>';
+			echo '<td style="border:1px solid #ddd; padding: 8px;">';
+			echo '<button class="button button-primary restore-version-admin" type="button" data-comment-id="' . esc_attr($comment->comment_ID) . '" data-version-index="' . esc_attr($i) . '" style="margin: 4px;">Восстановить</button>';
+			echo '<button class="button delete-version-admin" type="button" data-comment-id="' . esc_attr($comment->comment_ID) . '" data-version-index="' . esc_attr($i) . '" style="margin: 4px;">Удалить</button>';
 			echo '</td>';
 			echo '</tr>';
 		}
@@ -601,9 +601,139 @@ function render_comment_edit_history_meta_box($comment) {
 			</script>
 		<?
 	} else {
-		echo '<p>История версий отсутствует.</p>';
+		echo '<p>История версий отсутствует</p>';
 	}
 }
+
+
+// 
+// 
+// 
+// 
+// Жалоба
+
+// Добавление
+function add_comment_report() {
+	$comment_id = (int) ($_POST['comment_id'] ?? 0);
+	$text = trim($_POST['text'] ?? '');
+
+	if (!$comment_id || !$text) {
+		wp_send_json_error('invalid_data');
+	}
+
+	$comment = get_comment($comment_id);
+	if (!$comment) {
+		wp_send_json_error('comment_not_found');
+	}
+
+	$reports = get_comment_meta($comment_id, '_comment_reports', true);
+	if (!is_array($reports)) $reports = [];
+
+	$reports = get_comment_meta($comment_id, '_comment_reports', true);
+	if (!is_array($reports)) $reports = [];
+
+	$current_ip = $_SERVER['REMOTE_ADDR'] ?? '';
+	$current_user_id = get_current_user_id();
+
+	$guest_email = '';
+	if (!empty($_COOKIE['comment_guest'])) {
+		$guest = json_decode(stripslashes($_COOKIE['comment_guest']), true);
+		if (is_array($guest) && !empty($guest['email'])) {
+			$guest_email = $guest['email'];
+		}
+	}
+
+	foreach ($reports as $r) {
+		if (
+			(!empty($r['ip']) && $r['ip'] === $current_ip)
+			|| ($current_user_id && !empty($r['user_id']) && (int) $r['user_id'] === $current_user_id)
+			|| ($guest_email && !empty($r['guest_email']) && $r['guest_email'] === $guest_email)
+		) {
+			wp_send_json_error('already_reported');
+		}
+	}
+
+	$reports[] = [
+		'text' => wp_kses_post($text),
+		'date' => current_time('mysql'),
+		'user_id' => $current_user_id,
+		'guest_email' => $guest_email,
+		'ip' => $current_ip
+	];
+
+	update_comment_meta($comment_id, '_comment_reports', $reports);
+
+	wp_send_json_success();
+}
+
+add_action('wp_ajax_add_comment_report', 'add_comment_report');
+add_action('wp_ajax_nopriv_add_comment_report', 'add_comment_report');
+
+
+// Метабокс Жалобы в админке
+add_action('add_meta_boxes_comment', function () {
+	add_meta_box(
+		'comment_reports',
+		'Жалобы',
+		'render_comment_reports_meta_box',
+		'comment',
+		'normal'
+	);
+});
+
+// Рендер жалоб в админке 
+function render_comment_reports_meta_box($comment) {
+	$reports = get_comment_meta($comment->comment_ID, '_comment_reports', true);
+
+	if (empty($reports)) {
+		echo '<p>Жалоб нет</p>';
+		return;
+	}
+
+	echo '<table style="width:100%; border-collapse: collapse;">';
+	echo '<thead>';
+	echo '<tr>';
+	echo '<th style="border:1px solid #ddd; padding: 8px">Отправитель</th>';
+	echo '<th style="border:1px solid #ddd; padding: 8px">IP</th>';
+	echo '<th style="border:1px solid #ddd; padding: 8px">Дата</th>';
+	echo '<th style="border:1px solid #ddd; padding: 8px">Жалоба</th>';
+	echo '</tr>';
+	echo '</thead>';
+	echo '<tbody>';
+
+	foreach ($reports as $r) {
+		echo '<tr>';
+		echo '<td style="width: 20%; border:1px solid #ddd; padding: 8px">' . ($r['user_id'] ? 'Пользователь #' . $r['user_id'] : esc_html($r['guest_email'])) . '</td>';
+		echo '<td style="width: 10%; border:1px solid #ddd; padding: 8px">' . esc_html($r['ip']) . '</td>';
+		echo '<td style="width: 15%; border:1px solid #ddd; padding: 8px">' . esc_html($r['date']) . '</td>';
+		echo '<td style="border:1px solid #ddd; padding: 8px">' . esc_html($r['text']) . '</td>';
+		echo '</tr>';
+	}
+
+	echo '</tbody></table>';
+}
+
+add_filter('manage_edit-comments_columns', function ($cols) {
+	$new = [];
+	foreach ($cols as $key => $label) {
+		$new[$key] = $label;
+
+		if ($key === 'comment') {
+			$new['reports'] = 'Жалобы';
+		}
+	}
+
+	return $new;
+});
+
+add_action('manage_comments_custom_column', function ($column, $comment_id) {
+	if ($column !== 'reports') return;
+
+	$reports = get_comment_meta($comment_id, '_comment_reports', true);
+	if (!empty($reports)) {
+		echo '<a href="/wp-admin/comment.php?action=editcomment&c=876#comment_reports"><strong style="color:#d63638;">Жалобы - ' . count($reports) . '</strong></a>';
+	}
+}, 10, 2);
 
 
 // 

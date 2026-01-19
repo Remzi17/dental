@@ -51,7 +51,7 @@ export function closeOutClick(closedElement, clickedButton, clickedButtonActiveC
     const element = document.querySelector(closedElement);
     const withinBoundaries = e.composedPath().includes(element);
 
-    if (!withinBoundaries && button?.classList.contains(clickedButtonActiveClass) && e.target !== button && !e.target.closest(".popup")) {
+    if (!withinBoundaries && button?.classList.contains(clickedButtonActiveClass) && e.target !== button && !e.target.closest(".modal")) {
       button.click();
       // element.classList.remove('active');
       // button.classList.remove(clickedButtonActiveClass);

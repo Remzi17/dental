@@ -4859,7 +4859,7 @@ document.querySelectorAll("[data-notify-default]").forEach((item) => {
     }
     updateAriaAttributes() {
       this.main.main.role = "combobox";
-      this.main.main.setAttribute("aria-haspopup", "listbox");
+      this.main.main.setAttribute("aria-hasmodal", "listbox");
       this.main.main.setAttribute("aria-controls", this.content.main.id);
       this.main.main.setAttribute("aria-expanded", "false");
       this.content.main.setAttribute("role", "listbox");
