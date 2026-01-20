@@ -538,6 +538,8 @@ export function comment() {
 
   //
   //
+  //
+  //
   // Редактирование комментариев
 
   // Изменение
@@ -643,29 +645,7 @@ export function comment() {
     if (historyBtn) historyBtn.hidden = false;
   };
 
-  //
-  //
-  // События
-
-  document.addEventListener("click", (e) => {
-    const comment = e.target.closest(".comment");
-    if (!comment) return;
-
-    if (e.target.closest("[data-comment-edit]")) {
-      enableEdit(comment);
-      return;
-    }
-
-    if (e.target.closest("[data-cancel-edit]")) {
-      cancelEdit(comment);
-      return;
-    }
-
-    if (e.target.closest("[data-save-edit]")) {
-      saveEdit(comment, getCommentId(comment));
-    }
-  });
-
+  // Горячие клавиши
   document.addEventListener("keydown", (e) => {
     const comment = document.querySelector(".comment.is-editing");
     if (!comment) return;
@@ -677,6 +657,8 @@ export function comment() {
     }
   });
 
+  //
+  //
   //
   //
   // История версий
@@ -762,16 +744,6 @@ export function comment() {
   };
 
   document.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-comment-history]");
-    if (!btn) return;
-
-    const comment = btn.closest(".comment");
-    if (!comment) return;
-
-    openHistory(comment);
-  });
-
-  document.addEventListener("click", (e) => {
     const btn = e.target.closest(".modal-comment-restore");
     if (!btn) return;
 
@@ -790,17 +762,9 @@ export function comment() {
 
   //
   //
+  //
+  //
   // Жалоба
-
-  document.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-comment-report]");
-    if (!btn) return;
-
-    const comment = btn.closest(".comment");
-    if (!comment) return;
-
-    openReport(comment);
-  });
 
   const openReport = async (comment) => {
     const commentId = getCommentId(comment);
@@ -842,4 +806,56 @@ export function comment() {
     closeModal(modal);
     notify("Жалоба отправлена", "", "success");
   };
+
+  //
+  //
+  //
+  //
+  // События
+
+  document.addEventListener("click", (e) => {
+    const target = e.target;
+
+    const comment = target.closest(".comment");
+    if (!comment) return;
+
+    // Редактирование
+    if (target.closest("[data-comment-edit]")) {
+      enableEdit(comment);
+      return;
+    }
+
+    if (target.closest("[data-cancel-edit]")) {
+      cancelEdit(comment);
+      return;
+    }
+
+    if (target.closest("[data-save-edit]")) {
+      saveEdit(comment, getCommentId(comment));
+      return;
+    }
+
+    // История версий
+    if (target.closest("[data-comment-history]")) {
+      openHistory(comment);
+      return;
+    }
+
+    // Жалоба
+    if (target.closest("[data-comment-report]")) {
+      openReport(comment);
+      return;
+    }
+
+    // Поделиться
+    const shareBtn = target.closest("[data-comment-share]");
+    if (shareBtn) {
+      navigator.clipboard.writeText(`${window.location.href}#${comment.id}`);
+
+      shareBtn.closest("[data-context]")?.classList.remove("active");
+      shareBtn.closest("[data-context-menu]")?.classList.remove("active");
+
+      notify("Скопировано", "Ссылка на комментарий скопирована в буфер обмена", "success");
+    }
+  });
 }

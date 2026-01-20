@@ -16,11 +16,46 @@
 							<use xlink:href="<?=get_template_directory_uri()?>/assets/img/sprite.svg?ver=<?=spriteVersion()?>#dots"></use>
 						</svg>
 					</button>
-					<div class="context-menu__list" data-context-menu data-tab-focus=".context-menu__button,.active">
-						<button class="context-menu__item" type="button" data-comment-edit aria-label="Редактировать комментарий" title="Редактировать комментарий">Редактировать</button>
-						<button class="context-menu__item" type="button" data-comment-history aria-label="История версий комментария" title="История версий комментария">История версий</button>
-						<button class="context-menu__item" type="button" aria-label="Поделиться комментарием" title="Поделиться комментарием">Поделиться</button>
-						<button class="context-menu__item" type="button" data-comment-report aria-label="Пожаловаться на комментарий" title="Пожаловаться на комментарий">Пожаловаться</button>
+					<div 
+						class="context-menu__list" 
+						data-context-menu 
+						data-tab-focus=".context-menu__button,.active">
+
+						<button 
+							class="context-menu__item" 
+							type="button" 
+							data-comment-edit 
+							aria-label="Редактировать комментарий" 
+							title="Редактировать комментарий">
+							Редактировать
+						</button>
+
+						<button 
+							class="context-menu__item" 
+							type="button" 
+							data-comment-history 
+							aria-label="История версий комментария" 
+							title="История версий комментария">
+							История версий
+						</button>
+
+						<button 
+							class="context-menu__item" 
+							type="button" 
+							data-comment-share
+							aria-label="Поделиться комментарием" 
+							title="Поделиться комментарием">
+							Поделиться
+						</button>
+
+						<button 
+							class="context-menu__item" 
+							type="button" 
+							data-comment-report 
+							aria-label="Пожаловаться на комментарий" 
+							title="Пожаловаться на комментарий">
+							Пожаловаться
+						</button>
 					</div>
 				</div>
 			</div>
