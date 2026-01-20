@@ -4,17 +4,22 @@
 	<div class="section__top">
 		<h2 class="title-2">
 			Комментарии
-			<span class="gray-text"> <?=get_comments_number()?> </span>
+			<span class="gray-text comments__count"> <?=get_comments_number()?> </span>
 		</h2>
 	</div>
 
 	<div class="comments__content">
 
+		<!-- Контейнер для комментариев -->
+		<div class="comments__wrapper"></div>
+		<?
+			get_template_part('parts/comments/comments-template');
+		?>
+
 		<!-- Форма добавления комментария -->
 		<div class="comments__top">
-			<div class="gray-text">Добавьте комментарий</div>
 			<form class="form comment-add" method="post" action="<?=site_url('/wp-comments-post.php');?>">
-				<div class="form__fields" style="--columns: 2">
+				<div class="form__fields comment-add__fields" style="--columns: 2">
 					<? 
 						$current_user = wp_get_current_user();
 						$current_user_name = $current_user->display_name ? $current_user->display_name : $current_user->user_nicename;
@@ -27,13 +32,16 @@
 							<?
 						} else {
 							?>
-								<input type="text" name="author" class="input" placeholder="Имя*" required value="<?=esc_attr($current_user_name)?>">
-								<input type="email" name="email" class="input" placeholder="Email*" required value="<?=esc_attr($current_user_email)?>">
+								<input type="hidden" name="author" required value="<?=esc_attr($current_user_name)?>">
+								<input type="hidden" name="email" required value="<?=esc_attr($current_user_email)?>">
 							<? 
 						} 
 					?>
 
-					<textarea name="comment" class="textarea" placeholder="Комментарий" required data-columns="full"></textarea>
+					<div class="comment-add__row" data-columns="full">
+						<textarea name="comment" class="textarea" placeholder="Написать комментарий" required data-columns="full"></textarea>
+						<button type="submit" class="button comment-add__button" aria-label="Отправить комментарий"></button>
+					</div>
 
 					<input 
 						type="hidden" 
@@ -52,17 +60,9 @@
 					<? 
 						do_action('comment_form', get_the_ID());
 					?>
-
-					<button type="submit" class="button button_small comment-add__button">Добавить комментарий</button>
 				</div>
 			</form>
 		</div>
-
-		<!-- Контейнер для комментариев -->
-		<div class="comments__wrapper"></div>
-		<?
-			get_template_part('parts/comments/comments-template');
-		?>
 
 		<script>
 			window.commentsData = <?= json_encode(array_map(function($c) {
@@ -112,7 +112,7 @@
 				$approved = get_comments([
 					'post_id' => $post_id,
 					'status'  => 'approve',
-					'order'   => 'DESC',
+					'order'   => 'ASC',
 				]);
 
 				// Удалённые комментарии, у которых есть ответы

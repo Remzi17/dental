@@ -10,7 +10,7 @@
 
 	&__title
 		white-space: nowrap
-
+  
 		p
 			display: contents
 
@@ -34,12 +34,13 @@
 
 .button 
 	+adap('min-width', 180, 120)
-	+adap('min-height', 52, 44)
-	display: flex
+	+adap('min-height', 48, 44) 
+	display: flex 
 	align-items: center
 	justify-content: center
-	padding: em(12) em(20)
+	padding: em(10) em(20)
 	gap: 8px
+	flex-shrink: 0
 
 	background: var(--active)
 	+adap('border-radius', 16, 12)

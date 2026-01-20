@@ -3138,6 +3138,30 @@
   //
   //
   //
+  // Куки
+
+  // Установки куки
+  function setCookie(name, value, hours = 24) {
+    const expires = new Date(Date.now() + hours * 60 * 60 * 1000).toUTCString();
+    document.cookie = `${name}=${encodeURIComponent(value)}; path=/; expires=${expires}`;
+  }
+
+  // Получение куки
+  function getCookie(name) {
+    const cookies = document.cookie.split("; ").reduce((acc, cookie) => {
+      let [key, value] = cookie.split("=");
+      acc[key] = decodeURIComponent(value);
+      return acc;
+    }, {});
+
+    let cookieValue = cookies[name] || null;
+    return cookieValue;
+  }
+
+  //
+  //
+  //
+  //
   // Комментарии
 
   function comment() {
@@ -3155,8 +3179,9 @@
 
     const currentUser = window.currentUser;
 
-    const guestDataRaw = window.getCookie("comment_guest") || "{}";
+    const guestDataRaw = getCookie("comment_guest") || "{}";
     let guestData = {};
+
     try {
       guestData = JSON.parse(guestDataRaw);
     } catch {
@@ -3169,15 +3194,21 @@
 
     //
     //
-    // Обновление счётчиков
+    // Обновление счётчика комментариев
 
-    const updateCommentsUI = () => {
+    const updateCommentsUI = (front = false) => {
       const wrapper = document.querySelector(".comments__wrapper");
-      const counter = document.querySelector(".title-2 .gray-text");
+      const counter = document.querySelector(".comments__count");
+      if (!wrapper || !counter) return;
 
-      if (counter) {
-        counter.textContent = " " + (wrapper?.querySelectorAll(".comment").length || 0);
+      if (front) {
+        counter.textContent = Math.max(0, Number(counter.textContent) - 1);
+        return;
       }
+
+      if (wrapper.querySelector(".bounceOutLeft")) return;
+
+      counter.textContent = wrapper.querySelectorAll(".comment").length;
     };
 
     //
@@ -3319,8 +3350,6 @@
         if (!submitButton) return;
 
         submitButton.disabled = true;
-        const originalText = submitButton.textContent;
-        submitButton.textContent = "Отправка...";
 
         try {
           const formData = new FormData(form);
@@ -3333,7 +3362,6 @@
           });
 
           const data = await response.json().catch(() => null);
-
           const wrapper = document.querySelector(".comments__wrapper");
           const parentId = form.querySelector('[name="comment_parent"]')?.value || 0;
           const commentText = form.querySelector('[name="comment"]')?.value || "";
@@ -3356,7 +3384,21 @@
               const parent = document.querySelector(`#comment-${parentId}`);
               parent?.querySelector(".comment__content")?.appendChild(newComment);
             } else {
-              wrapper?.prepend(newComment);
+              wrapper?.append(newComment);
+            }
+
+            const rect = newComment.getBoundingClientRect();
+            const viewportHeight = window.innerHeight;
+            const elementHeight = rect.height;
+            const visibleFromBottom = viewportHeight - rect.top;
+            const visibleRatio = visibleFromBottom / elementHeight;
+
+            if (visibleRatio < 0.2) {
+              const stickyBottomOffset = headerTop.offsetHeight + document.querySelector(".comment-add").offsetHeight;
+              const offset = 8;
+              const targetPos = rect.top + window.pageYOffset - viewportHeight + elementHeight + stickyBottomOffset + offset;
+
+              scrollToSmoothly(targetPos, 400);
             }
 
             setTimeout(() => {
@@ -3370,7 +3412,7 @@
               email: formData.get("email") || "",
             };
 
-            window.setCookie("comment_guest", JSON.stringify(guest));
+            setCookie("comment_guest", JSON.stringify(guest));
 
             if (authorInput) authorInput.value = guest.name;
             if (emailInput) emailInput.value = guest.email;
@@ -3378,7 +3420,6 @@
 
           form.reset();
 
-          initReply();
           updateCommentsUI();
 
           notify(data?.data?.approved ? "Комментарий добавлен" : "Отправлено на модерацию", "", "success");
@@ -3386,7 +3427,6 @@
           notify("Ошибка сети", "", "danger");
         } finally {
           submitButton.disabled = false;
-          submitButton.textContent = originalText;
 
           document.querySelectorAll(".comment-add").forEach((formEl) => {
             if (!formEl.closest(".comments__top")) {
@@ -3403,53 +3443,61 @@
     //
     // Ответы на комментарии
 
-    const initReply = () => {
-      document.querySelectorAll(".comment__reply").forEach((button) => {
-        if (button.dataset.replyInitialized) return;
-        button.dataset.replyInitialized = "1";
+    document.addEventListener("click", (e) => {
+      const button = e.target.closest(".comment__reply");
+      if (!button) return;
 
-        button.addEventListener("click", () => {
-          const comment = button.closest(".comment");
-          if (!comment) return;
+      const comment = button.closest(".comment");
+      if (!comment) return;
 
-          const existingForm = comment.querySelector(".comment-add");
-          if (existingForm) {
-            existingForm.remove();
-            return;
-          }
+      const existingForm = comment.querySelector(".comment-add");
+      if (existingForm) {
+        existingForm.remove();
+        return;
+      }
 
-          document.querySelectorAll(".comment-add").forEach((form) => {
-            if (!form.closest(".comments__top")) form.remove();
-          });
-
-          const commentId = comment.id.replace("comment-", "");
-          const postId = document.querySelector("#comment_post_ID")?.value || "";
-
-          const html = `
-					<form class="form comment-add">
-						<input type="hidden" name="comment_post_ID" value="${escapeHTML(postId)}">
-						<input type="hidden" name="comment_parent" value="${escapeHTML(commentId)}">
-						<div class="form__fields" style="--columns: 2">
-							<input class="input" type="text" name="author" placeholder="Ваше имя" required>
-							<input class="input" type="email" name="email" placeholder="Ваш email" required>
-							<textarea name="comment" class="textarea" placeholder="Ответ" required data-columns="full"></textarea>
-						</div>
-						<div class="flex justify-start">
-							<button class="button button_small" type="submit">Оставить ответ</button>
-						</div>
-					</form>
-				`;
-
-          comment.querySelector(".comment__meta")?.insertAdjacentHTML("afterend", html);
-
-          const newForm = comment.querySelector("form.comment-add");
-          initForm(newForm);
-          newForm?.querySelector("textarea")?.focus();
-        });
+      document.querySelectorAll(".comment-add").forEach((form) => {
+        if (!form.closest(".comments__top")) form.remove();
       });
-    };
 
-    initReply();
+      const isAuthorized = window.currentUser?.id > 0;
+      const hasGuestCookie = Boolean(getCookie("comment_guest"));
+      const showGuestFields = !isAuthorized && !hasGuestCookie;
+      const commentId = comment.id.replace("comment-", "");
+      const postId = document.querySelector("#comment_post_ID")?.value || "";
+
+      const guestFields = showGuestFields
+        ? `
+      <input class="input" type="text" name="author" placeholder="Ваше имя" required>
+      <input class="input" type="email" name="email" placeholder="Ваш email" required>
+    `
+        : "";
+
+      const html = `
+      <form class="form comment-add">
+        <input type="hidden" name="comment_post_ID" value="${escapeHTML(postId)}">
+        <input type="hidden" name="comment_parent" value="${escapeHTML(commentId)}">
+
+        <div class="comment-add__row" data-columns="full">
+          ${guestFields}
+          <textarea
+            name="comment"
+            class="textarea"
+            placeholder="Ответ"
+            required
+            data-columns="full"
+          ></textarea>
+          <button type="submit" class="button comment-add__button" aria-label="Оставить ответ на комментарий"></button>
+        </div>
+      </form>
+    `;
+
+      comment.querySelector(".comment__meta")?.insertAdjacentHTML("afterend", html);
+
+      const newForm = comment.querySelector(".comment-add");
+      initForm(newForm);
+      newForm?.querySelector("textarea")?.focus();
+    });
 
     //
     //
@@ -3504,7 +3552,6 @@
         }
       });
 
-      initReply();
       updateCommentsUI();
     }
 
@@ -3593,6 +3640,8 @@
         if (data.data.action === "deleted") {
           comment.classList.add("bounceOutLeft");
           notify("Комментарий удален", "", "info");
+
+          updateCommentsUI(true);
 
           setTimeout(() => {
             const parent = comment.closest(".comment")?.parentElement?.closest(".comment");

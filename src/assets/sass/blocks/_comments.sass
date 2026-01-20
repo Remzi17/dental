@@ -1,36 +1,62 @@
 .comments
-	&__wrapper
-		// +adap('margin-bottom', -20, -12)
+	+adap('padding', 40, 16)
+	+bx
+	+adap('border-radius', 40, 16)
 
+	&__wrapper
 		&:empty 
 			display: none 
 
 	&__top 
 		display: grid
 		gap: 8px
-		+adap('margin-bottom', 20, 16)
+
+		position: sticky
+		bottom: 12px
+
+		&:after
+			content: ''
+			position: absolute
+			left: 0
+			top: 100%
+			width: 100%
+			+adap('height', 40, 16)
+			background: #fff
+
+
+
 
 :root
 	interpolate-size: allow-keywords
   
 .comment
-	transition: all .4s
+	position: relative
+	+adap('margin-bottom', 24, 12)
 
-	&:not(:last-of-type)
-		+adap('margin-bottom', 20, 12)
-		padding-bottom: 12px
-		border-bottom: 1px solid var(--gray_dark)
+	+t
+
+	&:after
+		content: ''
+
+		position: absolute
+		left: 0
+		+adap('bottom', -12, -6)
+
+		width: 100%
+		height: 1px
+		background: var(--gray)
 
 	&:last-child
-		border-bottom-color: transparent 
+		&:after
+			background: transparent 
 
 	&.bounceOutTop 
 		animation: fadeInTop .4s forwards
  
 	&.bounceOutLeft 
 		height: 0
-		margin: 0
-		padding: 0
+		margin: 0 !important
+		padding: 0 !important
 		translate: -100px 0
 		opacity: 0
 		border: 0
@@ -107,9 +133,10 @@
 		align-items: center
 		gap: 12px
 		margin-bottom: 12px
-
+ 
 		font-weight: 500 
 
+			
 		&+:is(.comment, .comment-add)
 			// margin-top: -12px
 
@@ -126,17 +153,49 @@
 		display: grid
 		+adap('gap', 12, 8)
 
-		&:not(:last-child)
-			margin-bottom: 20px
+		// &:not(:last-child)
+		// 	margin-bottom: 20px
+
+		&__fields 
+			// position: relative
+			// display: flex
+			// align-items: center
+			// gap: 12px
+			// flex-wrap: wrap
+
+		&__row 
+			position: relative
+			width: 100%
+			display: flex
+			gap: 8px
+			align-items: start
 
 		&__button 
-			justify-self: start
+			display: flex
+			align-items: center
+			justify-content: center
+			min-width: auto
+			padding: 4px
+
+			border-radius: 8px
+			aspect-ratio: 1
+
+			&:after
+				content: ''
+
+				width: 50%
+				height: 50%
+
+				+mask(url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M24 0l-6 22-8.129-7.239 7.802-8.234-10.458 7.227-7.215-1.754 24-12zm-15 16.668v7.332l3.258-4.431-3.258-2.901z'/%3E%3C/svg%3E") center / contain no-repeat, #fff)
 
 		textarea 
+			width: 100%
+			flex-grow: 1
+			
 			@supports (field-sizing: content)
 				field-sizing: content
 				height: auto
-				padding-block: 14.75px
+				+adap('padding-block', 14.75, 12.5)
 
 	& &-add
 		+adap('margin-top', 20, 12)

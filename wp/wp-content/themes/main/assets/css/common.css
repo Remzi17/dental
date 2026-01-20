@@ -1386,8 +1386,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75em 1.25em;
+  padding: 0.625em 1.25em;
   gap: 8px;
+  flex-shrink: 0;
   background: var(--active);
   color: #fff;
   white-space: nowrap;
@@ -1404,12 +1405,12 @@ body {
 }
 @media (max-width: 1500px) {
   .button {
-    min-height: round(clamp(min(52px, 44px),  42.4px  +  0.5vw , max(52px, 44px)), 1px);
+    min-height: round(clamp(min(48px, 44px),  43.2px  +  0.25vw , max(48px, 44px)), 1px);
   }
 }
 @media (min-width: 1501px) {
   .button {
-    min-height: 52px;
+    min-height: 48px;
   }
 }
 @media (max-width: 1500px) {

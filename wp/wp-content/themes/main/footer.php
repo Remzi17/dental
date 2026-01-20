@@ -381,6 +381,20 @@
 					buttonAdd.click()
 					await wait(700)
 				},
+			])
+		}
+
+		// ---------- F2 ----------
+		if (e.code === 'F2') {
+			runTest([
+				async function addComment() {
+					const textarea = document.querySelector('.comment-add textarea')
+					const buttonAdd = document.querySelector('.comment-add button')
+					if (!textarea || !buttonAdd) throw 'Невозможно добавить комментарий'
+					textarea.value = 'Тестовый комментарий F1'
+					buttonAdd.click()
+					await wait(700)
+				},
 				async function likeComment() {
 					const comments = document.querySelectorAll('.comment')
 					const newComment = Array.from(comments).find(c => c.textContent.includes('Тестовый комментарий F1'))
@@ -408,8 +422,8 @@
 			])
 		}
 
-		// ---------- F2 ----------
-		if (e.code === 'F2') {
+		// ---------- F3 ----------
+		if (e.code === 'F3') {
 			runTest([
 				async function addComment() {
 					const textarea = document.querySelector('.comment-add textarea')
