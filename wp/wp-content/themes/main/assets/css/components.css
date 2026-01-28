@@ -175,6 +175,98 @@
   color: #1cae6a;
 }
 
+[data-context] {
+  position: relative;
+}
+
+[data-context-menu] {
+  position: absolute;
+  z-index: 10;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.2s;
+  translate: 0 -8px;
+  font-size: 14px;
+}
+[data-context-menu].active {
+  translate: 0 0;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.context-menu {
+  width: max-content;
+}
+.context-menu__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+@media (max-width: 1500px) {
+  .context-menu__button {
+    width: round(clamp(min(28px, 20px),  18.4px  +  0.5vw , max(28px, 20px)), 1px);
+  }
+}
+@media (min-width: 1501px) {
+  .context-menu__button {
+    width: 28px;
+  }
+}
+@media (max-width: 1500px) {
+  .context-menu__button {
+    height: round(clamp(min(28px, 20px),  18.4px  +  0.5vw , max(28px, 20px)), 1px);
+  }
+}
+@media (min-width: 1501px) {
+  .context-menu__button {
+    height: 28px;
+  }
+}
+.context-menu__button svg {
+  width: min(20px, 80%);
+  height: min(20px, 80%);
+  fill: var(--gray_dark);
+}
+.context-menu__list {
+  width: max-content;
+  background: #fff;
+  box-shadow: 0 4px 8px 0 rgba(0, 67, 139, 0.08);
+  overflow: hidden;
+}
+@media (max-width: 1500px) {
+  .context-menu__list {
+    border-radius: round(clamp(min(12px, 8px),  7.2px  +  0.25vw , max(12px, 8px)), 1px);
+  }
+}
+@media (min-width: 1501px) {
+  .context-menu__list {
+    border-radius: 12px;
+  }
+}
+.context-menu__item {
+  display: flex;
+  padding: 0.5em 1em;
+  width: 100%;
+  transition: background 0.3s;
+}
+.context-menu__item[disabled] {
+  opacity: 0.5;
+}
+.context-menu__item:not(:last-child) {
+  border-bottom: 1px solid var(--gray);
+}
+@media (any-hover: hover) {
+  .context-menu__item:hover {
+    background: var(--gray);
+  }
+}
+.context-menu__item:focus-visible {
+  background: var(--gray);
+}
+.context-menu__item:focus-visible {
+  outline-offset: -3px;
+}
+
 .crumbs {
   display: flex;
   align-items: center;

@@ -3451,8 +3451,14 @@
       if (!comment) return;
 
       const existingForm = comment.querySelector(".comment-add");
+
       if (existingForm) {
-        existingForm.remove();
+        existingForm.classList.remove("active");
+
+        setTimeout(() => {
+          existingForm.remove();
+        }, 400);
+
         return;
       }
 
@@ -3495,6 +3501,11 @@
       comment.querySelector(".comment__meta")?.insertAdjacentHTML("afterend", html);
 
       const newForm = comment.querySelector(".comment-add");
+
+      requestAnimationFrame(() => {
+        newForm.classList.add("active");
+      });
+
       initForm(newForm);
       newForm?.querySelector("textarea")?.focus();
     });

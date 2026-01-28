@@ -25,7 +25,6 @@
 
 
 
-
 :root
 	interpolate-size: allow-keywords
   
@@ -132,10 +131,9 @@
 		display: flex
 		align-items: center
 		gap: 12px
-		margin-bottom: 12px
+		// margin-bottom: 12px
  
 		font-weight: 500 
-
 			
 		&+:is(.comment, .comment-add)
 			// margin-top: -12px
@@ -146,6 +144,7 @@
 			pointer-events: none
 
 	& &
+		margin-top: 12px
 		+adap('margin-left', 60, 32)
 
 	&-add 
@@ -198,90 +197,61 @@
 				+adap('padding-block', 14.75, 12.5)
 
 	& &-add
-		+adap('margin-top', 20, 12)
+		display: grid
+		height: 0
+		min-height: 1px
+		translate: 0 -12px
+		opacity: 0
+		pointer-events: none
+		+t
+
+
+		&.active
+			+adap('margin-block', 20, 12)
+			height: auto
+			grid-template-rows: 1fr
+			opacity: 1
+			translate: 0 0
+			pointer-events: auto
+
+
+		// height: 0
+		// overflow: hidden
+		// opacity: 0 
+		// +t
+		// pointer-events: none
+		// translate: 0 -20px
+
+		// &.active
+		// 	height: calc-size(auto, size)
+		// 	+adap('margin-block', 20, 12)
+		// 	opacity: 1
+		// 	translate: 0 0
+		// 	pointer-events: auto
+
+
 
 	&__content 
 		position: relative
 
 	&__edit 
 		&-actions 
-			opacity: 0
-			translate: 0 -20px
-			+t
 			height: 0
 			min-height: 1px
+			translate: 0 -20px
+			opacity: 0
+			+t
 			pointer-events: none
 
 			&.active 
-				margin-bottom: 8px
 				height: auto
-				opacity: 1
+				margin-bottom: 8px
 				translate: 0 0
+				opacity: 1
 				pointer-events: auto
 
 
 
-[data-context]
-	position: relative
-
-[data-context-menu]
-	position: absolute
-	z-index: 10
-
-	opacity: 0
-	pointer-events: none
-	+t(.2)
-	translate: 0 -8px
-
-	font-size: 14px
-
-	&.active
-		translate: 0 0
-		opacity: 1
-		pointer-events: auto
-
-
-.context-menu  
-	width: max-content
-
-	&__button
-		display: flex
-		align-items: center 
-		justify-content: center
-		+adap('width', 28, 20)
-		+adap('height', 28, 20)
-
-		svg 
-			width: min(20px, 80%)
-			height: min(20px, 80%)
-
-			fill: var(--gray_dark)
-
-	&__list 
-		width: max-content
-		+adap('border-radius', 12, 8)
-		background: #fff
-		+bx
-		overflow: hidden
-
-	&__item 
-		display: flex
-		padding: em(8) em(16)
-		width: 100%
-
-		transition: background .3s
-
-		&[disabled]
-			opacity: .5
-
-		&:not(:last-child)
-			border-bottom: 1px solid var(--gray)
-
-		+hov
-			background: var(--gray)
-
-		&:focus-visible 
-			outline-offset: -3px
 
 
 
