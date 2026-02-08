@@ -18,6 +18,7 @@ export function comment() {
   // Общие настройки и данные
 
   const ajaxUrl = window.LIKE_DATA.ajaxUrl;
+
   const escapeHTML = (value) => {
     if (!value && value !== 0) return "";
     return String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
@@ -26,12 +27,55 @@ export function comment() {
   const currentUser = window.currentUser;
 
   const guestDataRaw = getCookie("comment_guest") || "{}";
+
   let guestData = {};
 
   try {
     guestData = JSON.parse(guestDataRaw);
   } catch {
     guestData = {};
+  }
+
+  if (!guestData.id) {
+    guestData.id = (Date.now().toString() + Math.floor(Math.random() * 1000).toString()).slice(-6);
+    setCookie("comment_guest", JSON.stringify(guestData), 365);
+  }
+
+  const getCommentAuthor = () => {
+    if (currentUser?.id) return currentUser.name;
+    return `Гость #${guestData.id}`;
+  };
+
+  //
+  //
+  // Формат даты
+  const formatCommentDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const options = { day: "numeric", month: "long", year: "numeric" };
+
+    return date.toLocaleDateString("ru-RU", options);
+  };
+
+  function getCurrentDateTime(iso = false) {
+    const now = new Date();
+
+    const day = now.getDate();
+    const year = now.getFullYear();
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    const seconds = String(now.getSeconds()).padStart(2, "0");
+
+    if (iso) {
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const dayIso = String(day).padStart(2, "0");
+      return `${year}-${month}-${dayIso}T${hours}:${minutes}:${seconds}`;
+    } else {
+      const months = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
+
+      const monthName = months[now.getMonth()];
+      return `${day} ${monthName} ${year} ${hours}:${minutes}:${seconds}`;
+    }
   }
 
   const getCommentId = (commentEl) => {
@@ -61,7 +105,7 @@ export function comment() {
   //
   // Создание DOM комментария
 
-  const createCommentElement = ({ id, author, text, avatar, date = "только что", time, fulltime, likes = 0, dislikes = 0, can_delete = false, show_reply = true }) => {
+  const createCommentElement = ({ id, author, text, avatar, date = "только что", time, fulltime, likes = 0, dislikes = 0, can_delete = false, show_reply = true, edited_at = false, is_own = false }) => {
     const template = document.querySelector("#comment-template");
     if (!template) return null;
     const element = template.content.firstElementChild.cloneNode(true);
@@ -70,7 +114,15 @@ export function comment() {
     element.querySelector("[itemprop='discussionUrl']").setAttribute("content", `${window.location.href}#${element.id}`);
     element.querySelector("[itemprop='identifier']").setAttribute("content", element.id);
     element.querySelector("[data-author]").textContent = author;
-    element.querySelector("[data-text]").innerHTML = `<p>${text}</p>`;
+
+    const textEl = element.querySelector("[data-text]");
+    textEl.innerHTML = `<p>${text}</p>`;
+
+    const edited = element.querySelector("[data-edited]");
+    if (edited_at) {
+      edited.dataset.tooltip = edited_at;
+      edited.textContent = "изменено";
+    }
 
     const avatarEl = element.querySelector("[data-avatar]");
     if (avatarEl) {
@@ -83,24 +135,6 @@ export function comment() {
     }
 
     const dateEl = element.querySelector("[data-date]");
-
-    function getCurrentDateTime(iso = false) {
-      const now = new Date();
-
-      const day = String(now.getDate()).padStart(2, "0");
-      const month = String(now.getMonth() + 1).padStart(2, "0");
-      const year = now.getFullYear();
-
-      const hours = String(now.getHours()).padStart(2, "0");
-      const minutes = String(now.getMinutes()).padStart(2, "0");
-      const seconds = String(now.getSeconds()).padStart(2, "0");
-
-      if (iso) {
-        return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
-      } else {
-        return `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`;
-      }
-    }
 
     if (dateEl) {
       dateEl.textContent = date;
@@ -117,6 +151,18 @@ export function comment() {
     const replyBtn = element.querySelector("[data-reply]");
     const editBtn = element.querySelector("[data-comment-edit]");
     const historyBtn = element.querySelector("[data-comment-history]");
+    const reportBtn = element.querySelector("[data-comment-report]");
+
+    const isEditorOrHigher = ["administrator", "editor"].includes(currentUser.role);
+    const isOwn = is_own || commentData?.is_own === true;
+
+    if (reportBtn) {
+      if (isOwn && !isEditorOrHigher) {
+        reportBtn.remove();
+      } else {
+        reportBtn.dataset.commentId = id;
+      }
+    }
 
     if (likeBtn) {
       likeBtn.dataset.commentId = id;
@@ -200,12 +246,15 @@ export function comment() {
       try {
         const formData = new FormData(form);
         formData.append("action", "add_comment");
+        formData.append("guest_id", guestData.id);
 
         const response = await fetch(ajaxUrl, {
           method: "POST",
           credentials: "same-origin",
           body: formData,
         });
+
+        // formData.append("guest_id", guestData.id);
 
         const data = await response.json().catch(() => null);
         const wrapper = document.querySelector(".comments__wrapper");
@@ -217,11 +266,12 @@ export function comment() {
 
           const newComment = createCommentElement({
             id: data.data.comment_id,
-            author: authorInput?.value || "",
+            author: getCommentAuthor(),
             text: commentText,
             avatar: window.currentUser.avatar,
             can_delete: true,
             show_reply: isEditorOrHigher,
+            is_own: true,
           });
 
           newComment.classList.add("bounceOutTop");
@@ -256,9 +306,10 @@ export function comment() {
           const guest = {
             name: authorInput?.value || "",
             email: formData.get("email") || "",
+            id: guestData.id,
           };
 
-          setCookie("comment_guest", JSON.stringify(guest));
+          setCookie("comment_guest", JSON.stringify(guest), 365);
 
           if (authorInput) authorInput.value = guest.name;
           if (emailInput) emailInput.value = guest.email;
@@ -320,9 +371,9 @@ export function comment() {
 
     const guestFields = showGuestFields
       ? `
-      <input class="input" type="text" name="author" placeholder="Ваше имя" required>
-      <input class="input" type="email" name="email" placeholder="Ваш email" required>
-    `
+        <input class="input" type="text" name="author" placeholder="Ваше имя" required>
+        <input class="input" type="email" name="email" placeholder="Ваш email" required>
+      `
       : "";
 
     const html = `
@@ -363,12 +414,12 @@ export function comment() {
   if (Array.isArray(window.commentsData) && window.commentsData.length) {
     const wrapper = document.querySelector(".comments__wrapper");
     wrapper.innerHTML = "";
-
     const commentsMap = new Map();
 
     window.commentsData.forEach((comment) => {
-      const isOwnComment = comment.is_own || (currentUser.id === 0 && guestData.email && comment.email && guestData.email === comment.email);
+      const isOwnComment = comment.is_own;
       const isDeleted = comment.is_deleted;
+
       const element = createCommentElement({
         id: comment.id,
         author: comment.author,
@@ -379,8 +430,10 @@ export function comment() {
         fulltime: comment.fulltime,
         likes: comment.likes,
         dislikes: comment.dislikes,
+        dislikes: comment.dislikes,
         can_delete: isOwnComment && !isDeleted,
         show_reply: !isOwnComment && !isDeleted,
+        edited_at: comment.edited_at,
       });
 
       if (!element) return;
@@ -388,7 +441,7 @@ export function comment() {
       if (isDeleted) {
         element.classList.add("comment_deleted");
         element.querySelectorAll(".comment__like, .comment__dislike").forEach((btn) => {
-          btn.classList.add("disabled");
+          btn.disabled = true;
           btn.addEventListener("click", (e) => {
             e.preventDefault();
             e.stopImmediatePropagation();
@@ -481,7 +534,7 @@ export function comment() {
       const formData = new FormData();
       formData.append("action", "delete_comment");
       formData.append("comment_id", button.dataset.commentId);
-      formData.append("guest_email", guestData.email || "");
+      formData.append("guest_id", guestData.id || "");
       formData.append("nonce", LIKE_DATA.nonce.delete);
 
       const response = await fetch(ajaxUrl, { method: "POST", body: formData });
@@ -512,7 +565,7 @@ export function comment() {
               setTimeout(() => {
                 parent.remove();
                 updateCommentsUI();
-              }, 200);
+              }, 300);
             }
           }
         }, 600);
@@ -521,15 +574,16 @@ export function comment() {
       if (data.data.action === "hidden") {
         comment.querySelector(".comment__text").innerHTML = '<em class="gray-text">Комментарий удален</em>';
 
-        comment.querySelectorAll(".comment__like, .comment__dislike").forEach((b) => {
-          b.classList.add("disabled");
-          b.addEventListener("click", (e) => {
+        comment.querySelectorAll(".comment__like, .comment__dislike").forEach((button) => {
+          button.disabled = true;
+          button.addEventListener("click", (e) => {
             e.preventDefault();
             e.stopImmediatePropagation();
           });
         });
 
         comment.querySelector("[data-reply]")?.remove();
+        comment.querySelector("[data-comment-edit]")?.remove();
         comment.classList.add("comment_deleted");
 
         updateCommentsUI();
@@ -611,6 +665,21 @@ export function comment() {
     if (!textEl) return;
 
     const newText = normalizeContent(textEl.innerHTML);
+    const originalText = normalizeContent(comment.dataset.originalText || "");
+
+    if (newText === originalText) {
+      textEl.innerHTML = originalText;
+      textEl.contentEditable = "false";
+
+      comment.classList.remove("is-editing");
+
+      const actions = comment.querySelector("[data-comment-edit-actions]");
+      if (actions) actions.classList.remove("active");
+
+      delete comment.dataset.originalText;
+      return;
+    }
+
     if (!newText) {
       cancelEdit(comment);
       return;
@@ -630,7 +699,7 @@ export function comment() {
       const json = await res.json();
       if (!json.success) throw new Error(json.data || "Ошибка сохранения");
 
-      finishEdit(comment, newText);
+      finishEdit(comment, newText, json.data?.edited_at);
     } catch (e) {
       console.error(e);
       cancelEdit(comment);
@@ -638,13 +707,20 @@ export function comment() {
   };
 
   // Обновление
-  const finishEdit = (comment, html) => {
+  const finishEdit = (comment, html, editedAt) => {
     const text = comment.querySelector("[data-text]");
     if (!text) return;
 
     text.innerHTML = html;
-    text.contentEditable = "false";
 
+    if (editedAt) {
+      let edited = comment.querySelector(".comment__edited");
+
+      edited.dataset.tooltip = editedAt;
+      edited.textContent = "изменено";
+    }
+
+    text.contentEditable = "false";
     comment.classList.remove("is-editing");
 
     const actions = comment.querySelector("[data-comment-edit-actions]");
@@ -692,10 +768,7 @@ export function comment() {
       if (!json.success) throw new Error(json.data);
 
       const { history, can_restore } = json.data;
-      if (!history.length) {
-        alert("История версий пустая");
-        return;
-      }
+      if (!history.length) return;
 
       const modal = document.querySelector(".modal-comment-history");
       const content = modal.querySelector(".modal-comment-history__content");
@@ -754,21 +827,79 @@ export function comment() {
     }
   };
 
-  document.addEventListener("click", (e) => {
+  document.addEventListener("click", async (e) => {
     const btn = e.target.closest(".modal-comment-restore");
     if (!btn) return;
 
-    const tr = btn.closest("tr");
-    const text = tr.querySelector("td:nth-child(3)")?.innerHTML;
+    const commentId = btn.dataset.commentId;
+    const index = btn.dataset.versionIndex;
 
-    const comment = document.querySelector(`#comment-${btn.dataset.commentId}`);
+    const comment = document.querySelector(`#comment-${commentId}`);
     if (!comment) return;
 
-    const textEl = comment.querySelector("[data-text]");
-    if (textEl) textEl.innerHTML = text;
+    console.log("[restore] click", {
+      commentId,
+      index,
+      guestId: guestData?.id || null,
+      hasCommentEl: !!comment,
+    });
 
-    fadeOut(document.querySelector(".modal-comment-history"));
-    enableEdit(comment);
+    try {
+      const body = new URLSearchParams({
+        action: "restore_comment_version",
+        comment_id: commentId,
+        version_index: index,
+        guest_id: guestData.id || "",
+      });
+
+      console.log("[restore] sending body", Object.fromEntries(body));
+
+      const res = await fetch(ajaxUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body,
+      });
+
+      console.log("[restore] raw response", res);
+
+      const json = await res.json();
+      console.log("[restore] json response", json);
+
+      if (!json.success) {
+        console.error("[restore] server error", json.data);
+        throw new Error(json.data);
+      }
+
+      const historyRow = btn.closest("tr");
+      const restoredHtml = historyRow?.querySelector("td:nth-child(3)")?.innerHTML;
+
+      console.log("[restore] restoredHtml", restoredHtml);
+
+      const textEl = comment.querySelector("[data-text]");
+      console.log("[restore] textEl exists", !!textEl);
+
+      if (textEl && restoredHtml) {
+        textEl.innerHTML = restoredHtml;
+      }
+
+      if (json.data?.edited_at) {
+        const edited = comment.querySelector(".comment__edited");
+        console.log("[restore] edited label", edited);
+
+        if (edited) {
+          edited.textContent = "изменено";
+          edited.dataset.tooltip = json.data.edited_at;
+        }
+      }
+
+      fadeOut(document.querySelector(".modal-comment-history"));
+      notify("Восстановлено", `Версия комментария за ${json.data.edited_at} успешно восстановлена`, "success", true, 4000);
+    } catch (err) {
+      console.error("[restore] CATCH", err);
+      alert("Ошибка восстановления версии");
+    }
   });
 
   //
@@ -794,6 +925,15 @@ export function comment() {
     const form = e.target;
     const text = form.querySelector("textarea").value.trim();
     if (!text) return;
+
+    const comment = window.commentsData?.find((c) => c.id == commentId);
+
+    const isEditorOrHigher = ["administrator", "editor"].includes(currentUser.role);
+
+    if (comment?.is_own && !isEditorOrHigher) {
+      notify("Нельзя пожаловаться на свой комментарий", "", "danger");
+      return;
+    }
 
     const res = await fetch(ajaxUrl, {
       method: "POST",

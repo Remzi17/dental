@@ -45,9 +45,9 @@ export function tooltip() {
     tooltip.style.right = "";
 
     if (getPageSide(item) === "left") {
-      tooltip.style.left = "0";
+      tooltip.style.left = `${item.offsetWidth / 2 - tooltip.offsetWidth / 2}px`;
     } else {
-      tooltip.style.right = "0";
+      tooltip.style.right = `${item.offsetWidth / 2 - tooltip.offsetWidth / 2}px`;
     }
 
     tooltip.style.bottom = item.offsetHeight + "px";

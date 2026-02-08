@@ -40,13 +40,21 @@
 		background: #fff
 		+bx
 		overflow: hidden
+		
 
 	&__item 
 		display: flex
+		align-items: center
 		padding: em(8) em(16)
 		width: 100%
+		gap: 4px
 
 		transition: background .3s
+
+		svg, img 
+			+adap('width', 16, 12)
+			+adap('height', 16, 12)
+			flex-shrink: 0
 
 		&[disabled]
 			opacity: .5

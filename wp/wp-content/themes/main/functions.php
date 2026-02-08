@@ -24,3 +24,10 @@ foreach ($includes as $file) {
 		require_once $path;
 	}
 }
+
+add_action('init', function() {
+	error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+});
+ 
+add_filter('doing_it_wrong_trigger_error', '__return_false');
+

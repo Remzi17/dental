@@ -69,6 +69,11 @@ function get_reviews_count($post_id) {
 	return $comments_count ?: 0;
 }
 
+// Текущая дата и время в формате 1 января 2026 12:13:14
+function get_current_date_and_time() {
+	return date_i18n('j F Y H:i:s', strtotime(current_time('mysql')));
+}
+
 // Умный вывод даты 
 function get_smart_date($date_string = '', $full_format = false) {
 	if (empty($date_string)) {
@@ -81,7 +86,7 @@ function get_smart_date($date_string = '', $full_format = false) {
 	$diff = $current_time - $timestamp;
 
 	if ($full_format === true) {
-		return date('d.m.Y H:i:s', $timestamp); 
+		return date_i18n('j F Y H:i:s',  $timestamp);
 	}
 
 	if ($diff < HOUR_IN_SECONDS) {

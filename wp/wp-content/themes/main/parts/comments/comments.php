@@ -9,7 +9,6 @@
 	</div>
 
 	<div class="comments__content">
-
 		<!-- Контейнер для комментариев -->
 		<div class="comments__wrapper"></div>
 		<?
@@ -82,10 +81,28 @@
 				$reactions = get_comment_reactions_cookie();
 				$is_own_like = !empty($reactions[$c->comment_ID]['like']);
 				$is_own_dislike = !empty($reactions[$c->comment_ID]['dislike']);
+				
+				$guest_cookie = $_COOKIE['comment_guest'] ?? null;
+				$guest_cookie_id = null;
+
+				if ($guest_cookie) {
+						$guest_cookie_data = json_decode(stripslashes($guest_cookie), true);
+						$guest_cookie_id = $guest_cookie_data['id'] ?? null;
+				}
+
+				$is_own = false;
+
+				if (!$c->user_id && $guest_cookie_id) {
+						$comment_guest_id = get_comment_meta($c->comment_ID, 'guest_id', true);
+
+						if ($comment_guest_id && $comment_guest_id === $guest_cookie_id) {
+								$is_own = true;
+						}
+				}
 
 				return [
 					'id' => (int)$c->comment_ID,
-					'author' => $is_deleted ? '' : ($c->comment_author ?: 'Гость'),
+					'author' => $c->comment_author ?: 'Гость',
 					'author_id' => (int)$c->user_id,
 					'email' => $c->comment_author_email,
 					'avatar' => $avatar,
@@ -96,12 +113,14 @@
 					'parent' => (int)$c->comment_parent,
 					'likes' => get_comment_likes_count($c->comment_ID),
 					'dislikes' => get_comment_dislikes_count($c->comment_ID),
+					'is_own' => $is_own,
 					'is_own_like' => $is_own_like,
 					'is_own_dislike' => $is_own_dislike,
 					'is_deleted' => $is_deleted,
 					'can_delete' => can_delete_comment($c),
 					'can_edit' => can_edit_comment($c),
-					'has_history' => !empty(get_comment_meta($c->comment_ID, 'comment_edit_history', true))
+					'has_history' => !empty(get_comment_meta($c->comment_ID, 'comment_edit_history', true)),
+					'edited_at' => get_comment_meta($c->comment_ID, 'comment_edited_at', true)
 				];
 
 			}, (function() {
@@ -133,7 +152,13 @@
 					return !empty($children);
 				});
 
-				return array_merge($approved, $trashed_with_replies);
+				$comments = array_merge($approved, $trashed_with_replies);
+
+				usort($comments, function($a, $b) {
+					return strtotime($a->comment_date) <=> strtotime($b->comment_date);
+				});
+
+				return $comments;
 
 			})())) ?>;
 

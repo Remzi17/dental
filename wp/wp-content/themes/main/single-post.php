@@ -81,7 +81,7 @@
 							<div class="doctor">
 								<div class="hover-scale doctor__item">
 									<a href="<?=esc_url($author_url); ?>" class="doctor__item-img">
-										<?
+										<!-- <?
 											if (has_post_thumbnail($author_id)) {
 												echo get_the_post_thumbnail( 
 													$author_id, 
@@ -97,7 +97,7 @@
 													<a href="<?=esc_url($author_url); ?>" class="placeholder" aria-hidden="true"></a>
 												<?
 											} 
-										?>
+										?> -->
 									</a>
 									<div class="doctor__item-content">
 										<h3 class="title-4 doctor__item-title">

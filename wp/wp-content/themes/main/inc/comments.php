@@ -8,24 +8,31 @@
 
 // Добавление новых комментарий с проверкой прав и автоодобрением
 function ajax_add_comment() {
+
+	$guest_id = sanitize_text_field($_POST['guest_id'] ?? '');
 	$author_email = sanitize_email($_POST['email']);
 	$current_user = wp_get_current_user();
 		
-	// редактор и выше
 	$is_editor_or_higher = current_user_can('edit_others_posts');
 
-	// Проверка есть ли ранее одобренные комментарии от этого email
-	$has_approved = $author_email
-		? get_comments([
-			'author_email' => $author_email,
-			'status'       => 'approve',
-			'number'       => 1
-		])
-		: [];
+	$has_approved = false;
+
+	if (!empty($guest_id)) {
+		$approved_comments = get_comments([
+			'meta_key'   => 'guest_id',
+			'meta_value' => $guest_id,
+			'status'     => 'approve',
+			'number'     => 1,
+			'fields'     => 'ids',
+		]);
+
+		if (is_array($approved_comments) && count($approved_comments) > 0) {
+			$has_approved = true;
+		}
+	}
 
 	$parent_id = (int) ($_POST['comment_parent'] ?? 0);
 
-	// Запрещаем ответы на удалённые комментарии
 	if ($parent_id) {
 		$parent_comment = get_comment($parent_id);
 		if ($parent_comment && $parent_comment->comment_approved === 'trash') {
@@ -33,11 +40,17 @@ function ajax_add_comment() {
 		}
 	}
 
+	if (is_user_logged_in()) {
+		$author = $current_user->display_name;
+	} else {
+		$author = $guest_id ? 'Гость #' . $guest_id : 'Гость';
+	}
+ 
 	$commentdata = [
 		'comment_post_ID'      => (int) $_POST['comment_post_ID'],
 		'comment_parent'       => $parent_id,
 		'comment_content'      => wp_kses_post($_POST['comment']),
-		'comment_author'       => sanitize_text_field($_POST['author']),
+		'comment_author'       => $author,
 		'comment_author_email' => $author_email,
 		'comment_approved'     => ($has_approved || $is_editor_or_higher) ? 1 : 0,
 	];
@@ -47,6 +60,11 @@ function ajax_add_comment() {
 	}
 
 	$comment_id = wp_insert_comment($commentdata);
+
+	if ($guest_id) {
+		add_comment_meta($comment_id, 'guest_id', $guest_id, true);
+	} else {
+	}
 
 	if (!$comment_id) {
 		wp_send_json_error();
@@ -116,10 +134,9 @@ add_filter('comment_form_default_fields', function ($fields) {
 // Удаление комментария или скрытие, если есть ответы
 function handle_comment_delete() {
 
-	$comment_id   = intval($_POST['comment_id'] ?? 0);
-	$guest_email  = sanitize_email($_POST['guest_email'] ?? '');
+	$comment_id = (int) ($_POST['comment_id'] ?? 0);
+	$guest_id   = sanitize_text_field($_POST['guest_id'] ?? '');
 
-	error_log("🔹 Попытка удаления комментария id:$comment_id, guest_email:$guest_email");
 
 	if (!$comment_id) {
 		wp_send_json_error(['msg' => 'Комментарий не найден']);
@@ -132,18 +149,20 @@ function handle_comment_delete() {
 
 	$current_user = wp_get_current_user();
 
-	// админ / редактор
 	$is_editor_or_higher = is_user_logged_in() && current_user_can('edit_others_posts');
 
-	// гость — если совпадает email
-	$is_guest_owner = !$current_user->ID
-		&& $guest_email
-		&& strtolower($guest_email) === strtolower($comment->comment_author_email);
+	$is_guest_owner = false;
+	if (!$current_user->ID && $guest_id) {
+		$comment_guest_id = get_comment_meta($comment_id, 'guest_id', true);
+		if ($comment_guest_id && $comment_guest_id === $guest_id) {
+			$is_guest_owner = true;
+		}
+	}
 
 	$is_owner = (
 		$is_editor_or_higher ||
 		$is_guest_owner ||
-		(is_user_logged_in() && (int)$comment->user_id === get_current_user_id())
+		(is_user_logged_in() && (int) $comment->user_id === get_current_user_id())
 	);
 
 	if (!$is_owner) {
@@ -164,12 +183,15 @@ function handle_comment_delete() {
 
 		wp_send_json_success([
 			'action'    => 'hidden',
-			'parent_id' => (int)$comment->comment_parent
+			'parent_id' => (int) $comment->comment_parent
 		]);
 	}
 
 	wp_delete_comment($comment_id, false);
-	wp_send_json_success(['action' => 'deleted']);
+
+	wp_send_json_success([
+		'action' => 'deleted'
+	]);
 }
 
 add_action('wp_ajax_delete_comment', 'handle_comment_delete');
@@ -308,6 +330,7 @@ add_action('wp_ajax_dislike_comment', 'ajax_dislike_comment');
 add_action('wp_ajax_nopriv_dislike_comment', 'ajax_dislike_comment');
 
 
+
 //
 //
 //
@@ -322,18 +345,21 @@ function get_comment_edit_history($comment_id) {
 
 // Проверка прав на восстановление и удаление версий комментария
 function can_manage_comment_versions($comment) {
-	if (!$comment) return false;
 
-	if (current_user_can('edit_others_posts')) return true;
-
-	if (is_user_logged_in() && get_current_user_id() === (int) $comment->user_id) {
-		return true;
+	if (is_user_logged_in()) {
+		if (current_user_can('edit_others_posts')) return true;
+		return get_current_user_id() === (int) $comment->user_id;
 	}
 
-	if (!empty($_COOKIE['comment_guest']) && !empty($comment->comment_author_email)) {
+	if (!empty($_COOKIE['comment_guest'])) {
 		$guest = json_decode(stripslashes($_COOKIE['comment_guest']), true);
-		if (is_array($guest) && !empty($guest['email'])) {
-			return $guest['email'] === $comment->comment_author_email;
+
+		if (is_array($guest) && !empty($guest['id'])) {
+			$comment_guest_id = get_comment_meta($comment->comment_ID, 'guest_id', true);
+
+			if ($comment_guest_id && $comment_guest_id === $guest['id']) {
+				return true;
+			}
 		}
 	}
 
@@ -347,10 +373,17 @@ function can_edit_comment($comment) {
 		return get_current_user_id() === (int) $comment->user_id;
 	}
 
-	if (!empty($_COOKIE['comment_guest']) && !empty($comment->comment_author_email)) {
+	if (!empty($_COOKIE['comment_guest'])) {
 		$guest = json_decode(stripslashes($_COOKIE['comment_guest']), true);
-		if (is_array($guest) && !empty($guest['email'])) {
-			return $guest['email'] === $comment->comment_author_email;
+		if (is_array($guest)) {
+			if (!empty($guest['id'])) {
+				$comment_guest_id = get_comment_meta($comment->comment_ID, 'guest_id', true);
+				if ($comment_guest_id && $comment_guest_id === $guest['id']) return true;
+			}
+
+			if (!empty($guest['email']) && !empty($comment->comment_author_email)) {
+				if ($guest['email'] === $comment->comment_author_email) return true;
+			}
 		}
 	}
 
@@ -375,25 +408,35 @@ function ajax_edit_comment() {
 
 	$history = get_comment_edit_history($comment_id);
 
-	$history[] = [
-		'text' => $comment->comment_content,
-		'date' => current_time('mysql'),
-		'editor_id' => get_current_user_id()
-	];
+	$old = trim(wp_strip_all_tags($comment->comment_content));
+	$new = trim(wp_strip_all_tags($text));
 
-	update_comment_meta($comment_id, 'comment_edit_history', $history);
+	if ($old !== $new) {
+		$history[] = [
+			'text' => $comment->comment_content,
+			'date' => get_current_date_and_time(),
+			'editor_id' => get_current_user_id()
+		];
+
+		$history = array_slice($history, -20);
+
+		update_comment_meta($comment_id, 'comment_edit_history', $history);
+
+		update_comment_meta($comment_id, 'comment_edited_at', get_current_date_and_time());
+	}
 
 	wp_update_comment([
 		'comment_ID' => $comment_id,
 		'comment_content' => wp_kses_post($text)
 	]);
 
-	wp_send_json_success();
-}
+	wp_send_json_success([
+		'edited_at' => get_current_date_and_time()
+	]);
+} 
 
 add_action('wp_ajax_edit_comment', 'ajax_edit_comment');
 add_action('wp_ajax_nopriv_edit_comment', 'ajax_edit_comment');
-
 
 // Получение истории версий комментария 
 function ajax_get_comment_history() {
@@ -427,30 +470,68 @@ add_action('wp_ajax_nopriv_get_comment_history', 'ajax_get_comment_history');
 // Восстановление версии комментария
 function ajax_restore_comment_version() {
 	$comment_id = (int) ($_POST['comment_id'] ?? 0);
-	$index = (int) ($_POST['version_index'] ?? -1);
+	$index      = (int) ($_POST['version_index'] ?? -1);
+	$guest_id   = sanitize_text_field($_POST['guest_id'] ?? '');
+
 
 	$comment = get_comment($comment_id);
-	if (!$comment) wp_send_json_error('Комментарий не найден');
+	if (!$comment) {
+		wp_send_json_error('Комментарий не найден');
+	}
 
-	if (!can_manage_comment_versions($comment)) {
+
+	$is_editor_or_higher = is_user_logged_in() && current_user_can('edit_others_posts');
+
+	$is_user_owner = is_user_logged_in() && (int) $comment->user_id === get_current_user_id();
+
+	$is_guest_owner = false;
+	if (!$is_editor_or_higher && $guest_id) {
+		$comment_guest_id = get_comment_meta($comment_id, 'guest_id', true);
+
+		if ($comment_guest_id && $comment_guest_id === $guest_id) {
+			$is_guest_owner = true;
+		}
+	}
+
+
+	if (!$is_editor_or_higher && !$is_guest_owner && !$is_user_owner) {
 		wp_send_json_error('Нет прав');
 	}
 
 	$history = get_comment_edit_history($comment_id);
+
 	if (!isset($history[$index])) {
 		wp_send_json_error('Версия не найдена');
 	}
 
+	$current_text = $comment->comment_content;
+
 	wp_update_comment([
-		'comment_ID' => $comment_id,
-		'comment_content' => wp_kses_post($history[$index]['text'])
+		'comment_ID'       => $comment_id,
+		'comment_content'  => wp_kses_post($history[$index]['text']),
 	]);
 
-	wp_send_json_success();
+
+	$history[] = [
+		'text'      => $current_text,
+		'date'      => get_current_date_and_time(),
+		'editor_id' => get_current_user_id() ?: 0,
+	];
+
+	$history = array_slice($history, -10);
+
+	update_comment_meta($comment_id, 'comment_edit_history', $history);
+	update_comment_meta($comment_id, 'comment_edited_at', get_current_date_and_time());
+
+
+	wp_send_json_success([
+		'edited_at' => get_current_date_and_time(),
+	]);
 }
 
 add_action('wp_ajax_restore_comment_version', 'ajax_restore_comment_version');
-
+add_action('wp_ajax_nopriv_restore_comment_version', 'ajax_restore_comment_version');
+ 
 // Удаление версии комментария
 function ajax_delete_comment_version() {
 	$comment_id = (int) ($_POST['comment_id'] ?? 0);
@@ -488,7 +569,7 @@ add_action('add_meta_boxes_comment', function($comment) {
 	);
 });
 
-// Hендер метабокса
+// Рендер метабокса
 function render_comment_edit_history_meta_box($comment) {
 	$history = get_comment_meta($comment->comment_ID, 'comment_edit_history', true);
 
@@ -609,7 +690,7 @@ function render_comment_edit_history_meta_box($comment) {
 // 
 // 
 // 
-// 
+//  
 // Жалоба
 
 // Добавление
@@ -626,6 +707,28 @@ function add_comment_report() {
 		wp_send_json_error('comment_not_found');
 	}
 
+	$current_user_id = get_current_user_id();
+	$is_admin = current_user_can('administrator') || current_user_can('editor');
+
+	if (!$is_admin) {
+		if ($current_user_id && (int)$comment->user_id === $current_user_id) {
+			wp_send_json_error('cannot_report_own_comment');
+		}
+
+		if (!$comment->user_id && !empty($_COOKIE['comment_guest'])) {
+			$guest = json_decode(stripslashes($_COOKIE['comment_guest']), true);
+			$comment_guest_id = get_comment_meta($comment_id, 'guest_id', true);
+
+			if (
+				!empty($guest['id'])
+				&& $comment_guest_id
+				&& $guest['id'] === $comment_guest_id
+			) {
+				wp_send_json_error('cannot_report_own_comment');
+			}
+		}
+	}
+
 	$reports = get_comment_meta($comment_id, '_comment_reports', true);
 	if (!is_array($reports)) $reports = [];
 
@@ -634,8 +737,8 @@ function add_comment_report() {
 
 	$current_ip = $_SERVER['REMOTE_ADDR'] ?? '';
 	$current_user_id = get_current_user_id();
-
 	$guest_email = '';
+
 	if (!empty($_COOKIE['comment_guest'])) {
 		$guest = json_decode(stripslashes($_COOKIE['comment_guest']), true);
 		if (is_array($guest) && !empty($guest['email'])) {
@@ -655,7 +758,7 @@ function add_comment_report() {
 
 	$reports[] = [
 		'text' => wp_kses_post($text),
-		'date' => current_time('mysql'),
+		'date' => get_current_date_and_time(), 
 		'user_id' => $current_user_id,
 		'guest_email' => $guest_email,
 		'ip' => $current_ip

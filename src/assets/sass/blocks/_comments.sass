@@ -69,10 +69,15 @@
 		align-items: center 
 		justify-content: space-between
 		gap: 12px
- 
+
 	&__header,
 	&__text
 		margin-bottom: 12px
+
+	&__edited 
+		margin-right: auto
+		font-size: 12px
+		color: var(--gray_dark)
 
 	&__author 
 		display: flex
@@ -86,19 +91,16 @@
 			border-radius: 50% 
 			object-fit: cover
 
-	&__date
-		margin-right: auto
-		
 	&__date,
 	&__like,
 	&__dislike,
-	&__delete, 
 	&__reply 
 		display: flex
 		align-items: center
 		gap: 4px
+		+t
 
-		&[disabled]
+		&[disabled], &.disabled
 			pointer-events: none  
 
 		svg 
@@ -107,7 +109,11 @@
 
 			fill: currentColor
 			transition: none 
-		
+
+		+hov
+			&:not(.active, .disabled)
+				color: var(--text)
+	
 	&__like 
 		&.active  
 			color: var(--active)

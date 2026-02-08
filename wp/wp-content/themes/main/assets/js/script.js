@@ -14,6 +14,8 @@
   const headerTopFixed = "header_fixed";
   let fixedElements = document.querySelectorAll("[data-fixed]");
 
+  const allForms = document.querySelectorAll("form");
+
   const menuClass = ".header__mobile";
   const menu = document.querySelector(menuClass) ? document.querySelector(menuClass) : document.querySelector("head");
   const menuLink = document.querySelector(".menu-link") ? document.querySelector(".menu-link") : document.querySelector("head");
@@ -594,8 +596,231 @@
   window.addEventListener("scroll", throttle(fixedMenu, 100));
   window.addEventListener("resize", throttle(fixedMenu, 100));
 
-  // Очистка input и textarea при закрытии модалки и отправки формы / Удаление классов ошибки
-  let inputs = document.querySelectorAll("input, textarea");
+  //
+  //
+  //
+  //
+  // Анимации
+
+  const fadeTokens = new WeakMap();
+
+  // Плавное появление
+  const fadeIn$1 = (el, display = "block", timeout = 400) => {
+    document.body.classList.add("_fade");
+
+    const elements = el instanceof Element ? [el] : document.querySelectorAll(el);
+
+    if (!elements.length) return;
+
+    elements.forEach((element) => {
+      const token = Symbol();
+      fadeTokens.set(element, token);
+
+      element.style.transition = "none";
+      element.style.opacity = 0;
+      element.style.display = display;
+      element.style.transition = `opacity ${timeout}ms`;
+
+      setTimeout(() => {
+        if (fadeTokens.get(element) !== token) return;
+        element.style.opacity = 1;
+
+        setTimeout(() => {
+          if (fadeTokens.get(element) !== token) return;
+          document.body.classList.remove("_fade");
+        }, timeout);
+      }, 10);
+    });
+  };
+
+  // Плавное исчезновение
+  const fadeOut = (el, timeout = 400) => {
+    document.body.classList.add("_fade");
+
+    const elements = el instanceof Element ? [el] : document.querySelectorAll(el);
+
+    if (!elements.length) return;
+
+    elements.forEach((element) => {
+      const token = Symbol();
+      fadeTokens.set(element, token);
+
+      element.style.transition = "none";
+      element.style.opacity = 1;
+      element.style.transition = `opacity ${timeout}ms`;
+
+      setTimeout(() => {
+        if (fadeTokens.get(element) !== token) return;
+        element.style.opacity = 0;
+
+        setTimeout(() => {
+          if (fadeTokens.get(element) !== token) return;
+          element.style.display = "none";
+          document.body.classList.remove("_fade");
+        }, timeout);
+
+        setTimeout(() => {
+          if (fadeTokens.get(element) !== token) return;
+          element.removeAttribute("style");
+        }, timeout + 400);
+      }, 10);
+    });
+  };
+
+  // Плавно скрыть с анимацией слайда
+  const slideUp$1 = (target, duration = 400, showmore = 0) => {
+    if (target && !target.classList.contains("_slide")) {
+      target.classList.add("_slide");
+      target.style.transitionProperty = "height, margin, padding";
+      target.style.transitionDuration = duration + "ms";
+      target.style.height = `${target.offsetHeight}px`;
+      target.offsetHeight;
+      target.style.overflow = "hidden";
+      target.style.height = showmore ? `${showmore}px` : `0px`;
+      target.style.paddingBlock = 0;
+      target.style.marginBlock = 0;
+      window.setTimeout(() => {
+        target.style.display = !showmore ? "none" : "block";
+        !showmore ? target.style.removeProperty("height") : null;
+        target.style.removeProperty("padding-top");
+        target.style.removeProperty("padding-bottom");
+        target.style.removeProperty("margin-top");
+        target.style.removeProperty("margin-bottom");
+        !showmore ? target.style.removeProperty("overflow") : null;
+        target.style.removeProperty("transition-duration");
+        target.style.removeProperty("transition-property");
+        target.classList.remove("_slide");
+        document.dispatchEvent(
+          new CustomEvent("slideUpDone", {
+            detail: {
+              target: target,
+            },
+          })
+        );
+      }, duration);
+    }
+  };
+
+  // Плавно показать с анимацией слайда
+  const slideDown$1 = (target, duration = 400) => {
+    if (target && !target.classList.contains("_slide")) {
+      target.style.removeProperty("display");
+      let display = window.getComputedStyle(target).display;
+      if (display === "none") display = "block";
+      target.style.display = display;
+      let height = target.offsetHeight;
+      target.style.overflow = "hidden";
+      target.style.height = 0;
+      target.style.paddingBLock = 0;
+      target.style.marginBlock = 0;
+      target.offsetHeight;
+      target.style.transitionProperty = "height, margin, padding";
+      target.style.transitionDuration = duration + "ms";
+      target.style.height = height + "px";
+      target.style.removeProperty("padding-top");
+      target.style.removeProperty("padding-bottom");
+      target.style.removeProperty("margin-top");
+      target.style.removeProperty("margin-bottom");
+      window.setTimeout(() => {
+        target.style.removeProperty("height");
+        target.style.removeProperty("overflow");
+        target.style.removeProperty("transition-duration");
+        target.style.removeProperty("transition-property");
+      }, duration);
+    }
+  };
+
+  // Плавно изменить состояние между slideUp и slideDown
+  const slideToggle = (target, duration = 400) => {
+    if (target && isHidden(target)) {
+      return slideDown$1(target, duration);
+    } else {
+      return slideUp$1(target, duration);
+    }
+  };
+
+  //
+  //
+  //
+  //
+  // Валидация элементов формы
+
+  function validation() {
+    let inputs = document.querySelectorAll("input, textarea");
+
+    inputs.forEach((input) => {
+      if (!input) return;
+
+      const parentElement = input.parentElement;
+
+      const updateActiveState = () => {
+        if (input.type === "text" || input.type === "date") {
+          parentElement.classList.toggle("active", input.value.length > 0);
+        }
+      };
+
+      // Валидация ФИО
+      const validateFIOField = () => {
+        const nameAttr = input.name.toLowerCase() || "";
+        const placeholder = input.placeholder.toLowerCase() || "";
+        const fioKeywords = ["имя", "фамилия", "отчество"];
+        const isFIO = nameAttr.includes("name") || fioKeywords.some((word) => placeholder.includes(word));
+
+        if (isFIO) {
+          input.value = input.value.replace(/[^а-яА-ЯёЁ\s]/g, "");
+          input.value = input.value.replace(/\s{2,}/g, " ");
+        }
+      };
+
+      input.addEventListener("keyup", updateActiveState);
+
+      input.addEventListener("change", () => {
+        input.classList.remove("wpcf7-not-valid");
+        updateActiveState();
+
+        if (input.type === "email") {
+          const value = input.value.trim();
+
+          if (!value) {
+            input.setCustomValidity("");
+            return;
+          }
+
+          const emailPattern = /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/;
+
+          if (!emailPattern.test(value)) {
+            input.setCustomValidity("Введите корректный email");
+          } else {
+            input.setCustomValidity("");
+          }
+        }
+      });
+
+      input.addEventListener("input", () => {
+        if (input.getAttribute("data-number")) {
+          input.value = input.value.replace(/\D/g, "").replace(/(\d)(?=(\d{3})+$)/g, "$1 ");
+        }
+
+        if (input.type === "email") {
+          input.value = input.value.replace(/[^a-zA-Z0-9.!#$%&'*+/=?^_`{|}~@-]/g, "");
+        }
+
+        validateFIOField();
+      });
+
+      input.addEventListener("paste", (e) => {
+        setTimeout(() => {
+          if (input.type === "email") {
+            input.value = input.value.replace(/[^a-zA-Z0-9.!#$%&'*+/=?^_`{|}~@-]/g, "");
+          }
+          validateFIOField();
+          updateActiveState();
+        }, 0);
+      });
+    });
+  }
+
+  validation();
 
   function clearInputs() {
     inputs.forEach((element) => {
@@ -603,122 +828,82 @@
     });
   }
 
-  inputs.forEach((input) => {
-    if (!input) return;
-
-    const parentElement = input.parentElement;
-
-    const updateActiveState = () => {
-      if (input.type === "text" || input.type === "date") {
-        parentElement.classList.toggle("active", input.value.length > 0);
-      }
-    };
-
-    // Валидация ФИО
-    const validateFIOField = () => {
-      const nameAttr = input.name.toLowerCase() || "";
-      const placeholder = input.placeholder.toLowerCase() || "";
-      const fioKeywords = ["имя", "фамилия", "отчество"];
-      const isFIO = nameAttr.includes("name") || fioKeywords.some((word) => placeholder.includes(word));
-
-      if (isFIO) {
-        input.value = input.value.replace(/[^а-яА-ЯёЁ\s]/g, "");
-        input.value = input.value.replace(/\s{2,}/g, " ");
-      }
-    };
-
-    input.addEventListener("keyup", updateActiveState);
-    input.addEventListener("change", () => {
-      input.classList.remove("wpcf7-not-valid");
-      updateActiveState();
-    });
-
-    input.addEventListener("input", () => {
-      if (input.getAttribute("data-number")) {
-        input.value = input.value.replace(/\D/g, "").replace(/(\d)(?=(\d{3})+$)/g, "$1 ");
-      }
-
-      if (input.type === "email") {
-        input.value = input.value.replace(/[^a-zA-Z0-9.!#$%&'*+/=?^_`{|}~@-]/g, "");
-      }
-
-      validateFIOField();
-    });
-
-    input.addEventListener("paste", (e) => {
-      setTimeout(() => {
-        if (input.type === "email") {
-          input.value = input.value.replace(/[^a-zA-Z0-9.!#$%&'*+/=?^_`{|}~@-]/g, "");
-        }
-        validateFIOField();
-        updateActiveState();
-      }, 0);
-    });
-  });
-
   // Проверка формы перед отправкой
   function initFormValidation(form) {
-    const checkRequiredChoice = () => {
-      let requiredChoice = form.querySelectorAll("[data-required-choice]");
-      let hasValue = Array.from(requiredChoice).some((input) => input.value.trim() !== "" && input.value !== "+7 ");
+    const getHasChoiceValue = () => {
+      const requiredChoice = form.querySelectorAll("[data-required-choice]");
+
+      return Array.from(requiredChoice).some((input) => {
+        if (input.type === "tel") {
+          return input.value.replace(/\D/g, "").length >= 11;
+        }
+
+        return input.value.trim() !== "";
+      });
+    };
+
+    const updateRequiredChoice = () => {
+      const hasChoiceValue = getHasChoiceValue();
+      const requiredChoice = form.querySelectorAll("[data-required-choice]");
 
       requiredChoice.forEach((input) => {
-        if (!hasValue) {
-          input.setAttribute("required", "true");
-        } else {
+        if (hasChoiceValue) {
           input.removeAttribute("required");
+          input.setCustomValidity("");
+        } else {
+          input.setAttribute("required", "true");
         }
       });
     };
 
-    checkRequiredChoice();
+    updateRequiredChoice();
 
     form.addEventListener(
       "submit",
       (e) => {
         let isValid = true;
 
-        form.querySelectorAll('input[type="tel"]').forEach((input) => {
-          const val = input.value.trim();
+        updateRequiredChoice();
 
-          const requiredLength = val.startsWith("+7") ? 17 : val.startsWith("8") ? 16 : Infinity;
+        const hasChoiceValue = getHasChoiceValue();
+        const inputTel = form.querySelector('input[type="tel"]');
+        const digits = inputTel.value.replace(/\D/g, "");
 
-          if (val.length < requiredLength && val.length > 3) {
-            input.setCustomValidity("Телефон должен содержать 11 цифр");
-            input.reportValidity();
-            e.preventDefault();
-            isValid = false;
-          } else {
-            input.setCustomValidity("");
-          }
-        });
+        if (!hasChoiceValue && digits.length > 0 && digits.length !== 11) {
+          e.preventDefault();
+          isValid = false;
+        } else {
+          inputTel.setCustomValidity("");
+        }
 
-        checkRequiredChoice();
-
-        if (!isValid || !form.checkValidity()) e.preventDefault();
+        if (!isValid || !form.checkValidity()) {
+          e.preventDefault();
+        }
       },
       {
         capture: true,
       }
     );
 
-    let requiredChoice = form.querySelectorAll("[data-required-choice]");
+    const requiredChoice = form.querySelectorAll("[data-required-choice]");
 
     requiredChoice.forEach((input) => {
-      input.addEventListener("input", checkRequiredChoice);
+      input.addEventListener("input", updateRequiredChoice);
     });
   }
 
-  document.querySelectorAll("form").forEach(initFormValidation);
+  if (allForms) {
+    allForms.forEach((form) => {
+      initFormValidation(form);
+    });
+  }
 
   // После отправки формы
   function successSubmitForm(form) {
-    let modalInterval = 1500;
-
     fadeOut(".modal");
 
     setTimeout(() => {
-      fadeIn(".modal-thank");
+      fadeIn$1(".modal-thank");
     }, modalInterval - 500);
 
     setTimeout(() => {
@@ -729,17 +914,65 @@
       body.classList.remove("no-scroll");
     }, modalInterval * 3);
 
-    form.reset();
-    form.querySelectorAll("[data-original-placeholder]").forEach((input) => {
-      input.placeholder = input.getAttribute("data-original-placeholder");
-    });
+    // form.reset();
+
+    // const originalPlaceholders = form.querySelectorAll("[data-original-placeholder]");
+
+    // if (originalPlaceholders) {
+    //   originalPlaceholders.forEach((input) => {
+    //     input.placeholder = input.getAttribute("data-original-placeholder");
+    //   });
+    // }
   }
 
   if (typeof window !== "undefined") {
     window.successSubmitForm = successSubmitForm;
   }
 
-  /*  
+  // Валидация поля Телефон или Почта
+  const inputs = document.querySelectorAll("[data-tel-or-email]");
+
+  inputs.forEach((input) => {
+    let mode = "";
+    const originalPlaceholder = input.placeholder;
+
+    input.addEventListener("input", (e) => {
+      input.setCustomValidity("");
+
+      let val = input.value;
+
+      if (val.includes("+")) {
+        const firstPlus = val.indexOf("+");
+        val = (firstPlus === 0 ? "+" : "") + val.replace(/\+/g, "").trim();
+        input.value = val;
+      }
+
+      const trimmed = val.trim();
+      const hasAt = trimmed.includes("@");
+      const hasLetter = /[a-zA-Zа-яА-Я]/.test(trimmed);
+      const digitsOnly = trimmed.replace(/\D/g, "");
+      const startsLikePhone = /^[\+78]/.test(trimmed);
+      const isPhone = digitsOnly.length >= 4 && !hasLetter && !hasAt && val !== "+";
+
+      if ((startsLikePhone || isPhone) && !hasLetter && !hasAt) {
+        if (mode !== "phone") {
+          mode = "phone";
+          input.type = "tel";
+          input.placeholder = "";
+        }
+        maskPhone();
+      } else {
+        if (mode !== "email") {
+          mode = "email";
+          input.type = "email";
+          input.placeholder = originalPlaceholder;
+        }
+        validation();
+      }
+    });
+  });
+
+  /* 
     ================================================
   	  
     Отправка форм
@@ -748,54 +981,51 @@
   */
 
   function form() {
-    const allForms = Array.from(document.querySelectorAll("form")).filter(({ action }) => !action || action === "" || action === "/");
-
     allForms.forEach((form) => {
-      if (!form.classList.contains("wpcf7-form")) {
-        if (!form.hasAttribute("enctype")) {
-          form.setAttribute("enctype", "multipart/form-data");
-        }
+      if (form.classList.contains("wpcf7-form")) return;
 
-        form.addEventListener("submit", formSend);
-
-        async function formSend(e) {
-          e.preventDefault();
-
-          let formData = new FormData(form);
-          form.classList.add("sending");
-
-          try {
-            let mailResponse = await fetch("/mail.php", {
-              method: "POST",
-              body: formData,
-            });
-
-            let wpFormData = new FormData(form);
-            wpFormData.append("action", "submit_request");
-
-            let wpResponse = await fetch("/wp-admin/admin-ajax.php", {
-              method: "POST",
-              body: wpFormData,
-              credentials: "same-origin",
-            });
-
-            let wpResult = await wpResponse.json();
-
-            if (mailResponse.ok && wpResult.success) {
-              successSubmitForm(form);
-            } else {
-              console.error("Ошибка при отправке:", {
-                mail: mailResponse,
-                wp: wpResult,
-              });
-            }
-          } catch (error) {
-            console.error("Ошибка сети:", error);
-          } finally {
-            form.classList.remove("sending");
-          }
-        }
+      if (!form.hasAttribute("enctype")) {
+        form.setAttribute("enctype", "multipart/form-data");
       }
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        form.classList.add("sending");
+
+        try {
+          const formData = new FormData(form);
+
+          const mailResponse = await fetch("/mail.php", {
+            method: "POST",
+            body: formData,
+          });
+
+          const wpFormData = new FormData(form);
+          wpFormData.append("action", "submit_request");
+
+          const wpResponse = await fetch("/wp-admin/admin-ajax.php", {
+            method: "POST",
+            body: wpFormData,
+            credentials: "same-origin",
+          });
+
+          const wpResult = await wpResponse.json();
+
+          if (mailResponse.ok && wpResult.success) {
+            successSubmitForm(form);
+          } else {
+            console.error("Ошибка при отправке:", {
+              mail: mailResponse,
+              wp: wpResult,
+            });
+          }
+        } catch (err) {
+          console.error("Ошибка сети:", err);
+        } finally {
+          form.classList.remove("sending");
+        }
+      });
     });
   }
 
@@ -1044,149 +1274,6 @@
   //
   //
   //
-  // Анимации
-
-  const fadeTokens = new WeakMap();
-
-  // Плавное появление
-  const fadeIn$1 = (el, display = "block", timeout = 400) => {
-    document.body.classList.add("_fade");
-
-    const elements = el instanceof Element ? [el] : document.querySelectorAll(el);
-
-    if (!elements.length) return;
-
-    elements.forEach((element) => {
-      const token = Symbol();
-      fadeTokens.set(element, token);
-
-      element.style.transition = "none";
-      element.style.opacity = 0;
-      element.style.display = display;
-      element.style.transition = `opacity ${timeout}ms`;
-
-      setTimeout(() => {
-        if (fadeTokens.get(element) !== token) return;
-        element.style.opacity = 1;
-
-        setTimeout(() => {
-          if (fadeTokens.get(element) !== token) return;
-          document.body.classList.remove("_fade");
-        }, timeout);
-      }, 10);
-    });
-  };
-
-  // Плавное исчезновение
-  const fadeOut$1 = (el, timeout = 400) => {
-    document.body.classList.add("_fade");
-
-    const elements = el instanceof Element ? [el] : document.querySelectorAll(el);
-
-    if (!elements.length) return;
-
-    elements.forEach((element) => {
-      const token = Symbol();
-      fadeTokens.set(element, token);
-
-      element.style.transition = "none";
-      element.style.opacity = 1;
-      element.style.transition = `opacity ${timeout}ms`;
-
-      setTimeout(() => {
-        if (fadeTokens.get(element) !== token) return;
-        element.style.opacity = 0;
-
-        setTimeout(() => {
-          if (fadeTokens.get(element) !== token) return;
-          element.style.display = "none";
-          document.body.classList.remove("_fade");
-        }, timeout);
-
-        setTimeout(() => {
-          if (fadeTokens.get(element) !== token) return;
-          element.removeAttribute("style");
-        }, timeout + 400);
-      }, 10);
-    });
-  };
-
-  // Плавно скрыть с анимацией слайда
-  const slideUp$1 = (target, duration = 400, showmore = 0) => {
-    if (target && !target.classList.contains("_slide")) {
-      target.classList.add("_slide");
-      target.style.transitionProperty = "height, margin, padding";
-      target.style.transitionDuration = duration + "ms";
-      target.style.height = `${target.offsetHeight}px`;
-      target.offsetHeight;
-      target.style.overflow = "hidden";
-      target.style.height = showmore ? `${showmore}px` : `0px`;
-      target.style.paddingBlock = 0;
-      target.style.marginBlock = 0;
-      window.setTimeout(() => {
-        target.style.display = !showmore ? "none" : "block";
-        !showmore ? target.style.removeProperty("height") : null;
-        target.style.removeProperty("padding-top");
-        target.style.removeProperty("padding-bottom");
-        target.style.removeProperty("margin-top");
-        target.style.removeProperty("margin-bottom");
-        !showmore ? target.style.removeProperty("overflow") : null;
-        target.style.removeProperty("transition-duration");
-        target.style.removeProperty("transition-property");
-        target.classList.remove("_slide");
-        document.dispatchEvent(
-          new CustomEvent("slideUpDone", {
-            detail: {
-              target: target,
-            },
-          })
-        );
-      }, duration);
-    }
-  };
-
-  // Плавно показать с анимацией слайда
-  const slideDown$1 = (target, duration = 400) => {
-    if (target && !target.classList.contains("_slide")) {
-      target.style.removeProperty("display");
-      let display = window.getComputedStyle(target).display;
-      if (display === "none") display = "block";
-      target.style.display = display;
-      let height = target.offsetHeight;
-      target.style.overflow = "hidden";
-      target.style.height = 0;
-      target.style.paddingBLock = 0;
-      target.style.marginBlock = 0;
-      target.offsetHeight;
-      target.style.transitionProperty = "height, margin, padding";
-      target.style.transitionDuration = duration + "ms";
-      target.style.height = height + "px";
-      target.style.removeProperty("padding-top");
-      target.style.removeProperty("padding-bottom");
-      target.style.removeProperty("margin-top");
-      target.style.removeProperty("margin-bottom");
-      window.setTimeout(() => {
-        target.style.removeProperty("height");
-        target.style.removeProperty("overflow");
-        target.style.removeProperty("transition-duration");
-        target.style.removeProperty("transition-property");
-      }, duration);
-    }
-  };
-
-  // Плавно изменить состояние между slideUp и slideDown
-  const slideToggle = (target, duration = 400) => {
-    if (target && isHidden(target)) {
-      return slideDown$1(target, duration);
-    } else {
-      return slideUp$1(target, duration);
-    }
-  };
-
-  //
-  //
-  //
-  //
   // Работа с url
 
   // Получение хэша
@@ -1254,7 +1341,7 @@
     body.classList.remove(bodyOpenModalClass);
 
     setTimeout(() => {
-      fadeOut$1(modal);
+      fadeOut(modal);
 
       if (removeHashFlag && getHash() == modal.id) {
         history.pushState("", document.title, window.location.pathname + window.location.search);
@@ -2269,9 +2356,9 @@
       tooltip.style.right = "";
 
       if (getPageSide(item) === "left") {
-        tooltip.style.left = "0";
+        tooltip.style.left = `${item.offsetWidth / 2 - tooltip.offsetWidth / 2}px`;
       } else {
-        tooltip.style.right = "0";
+        tooltip.style.right = `${item.offsetWidth / 2 - tooltip.offsetWidth / 2}px`;
       }
 
       tooltip.style.bottom = item.offsetHeight + "px";
@@ -3172,6 +3259,7 @@
     // Общие настройки и данные
 
     const ajaxUrl = window.LIKE_DATA.ajaxUrl;
+
     const escapeHTML = (value) => {
       if (!value && value !== 0) return "";
       return String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
@@ -3180,12 +3268,44 @@
     const currentUser = window.currentUser;
 
     const guestDataRaw = getCookie("comment_guest") || "{}";
+
     let guestData = {};
 
     try {
       guestData = JSON.parse(guestDataRaw);
     } catch {
       guestData = {};
+    }
+
+    if (!guestData.id) {
+      guestData.id = (Date.now().toString() + Math.floor(Math.random() * 1000).toString()).slice(-6);
+      setCookie("comment_guest", JSON.stringify(guestData), 365);
+    }
+
+    const getCommentAuthor = () => {
+      if (currentUser?.id) return currentUser.name;
+      return `Гость #${guestData.id}`;
+    };
+
+    function getCurrentDateTime(iso = false) {
+      const now = new Date();
+
+      const day = now.getDate();
+      const year = now.getFullYear();
+      const hours = String(now.getHours()).padStart(2, "0");
+      const minutes = String(now.getMinutes()).padStart(2, "0");
+      const seconds = String(now.getSeconds()).padStart(2, "0");
+
+      if (iso) {
+        const month = String(now.getMonth() + 1).padStart(2, "0");
+        const dayIso = String(day).padStart(2, "0");
+        return `${year}-${month}-${dayIso}T${hours}:${minutes}:${seconds}`;
+      } else {
+        const months = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
+
+        const monthName = months[now.getMonth()];
+        return `${day} ${monthName} ${year} ${hours}:${minutes}:${seconds}`;
+      }
     }
 
     const getCommentId = (commentEl) => {
@@ -3215,7 +3335,7 @@
     //
     // Создание DOM комментария
 
-    const createCommentElement = ({ id, author, text, avatar, date = "только что", time, fulltime, likes = 0, dislikes = 0, can_delete = false, show_reply = true }) => {
+    const createCommentElement = ({ id, author, text, avatar, date = "только что", time, fulltime, likes = 0, dislikes = 0, can_delete = false, show_reply = true, edited_at = false, is_own = false }) => {
       const template = document.querySelector("#comment-template");
       if (!template) return null;
       const element = template.content.firstElementChild.cloneNode(true);
@@ -3224,7 +3344,15 @@
       element.querySelector("[itemprop='discussionUrl']").setAttribute("content", `${window.location.href}#${element.id}`);
       element.querySelector("[itemprop='identifier']").setAttribute("content", element.id);
       element.querySelector("[data-author]").textContent = author;
-      element.querySelector("[data-text]").innerHTML = `<p>${text}</p>`;
+
+      const textEl = element.querySelector("[data-text]");
+      textEl.innerHTML = `<p>${text}</p>`;
+
+      const edited = element.querySelector("[data-edited]");
+      if (edited_at) {
+        edited.dataset.tooltip = edited_at;
+        edited.textContent = "изменено";
+      }
 
       const avatarEl = element.querySelector("[data-avatar]");
       if (avatarEl) {
@@ -3237,24 +3365,6 @@
       }
 
       const dateEl = element.querySelector("[data-date]");
-
-      function getCurrentDateTime(iso = false) {
-        const now = new Date();
-
-        const day = String(now.getDate()).padStart(2, "0");
-        const month = String(now.getMonth() + 1).padStart(2, "0");
-        const year = now.getFullYear();
-
-        const hours = String(now.getHours()).padStart(2, "0");
-        const minutes = String(now.getMinutes()).padStart(2, "0");
-        const seconds = String(now.getSeconds()).padStart(2, "0");
-
-        if (iso) {
-          return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
-        } else {
-          return `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`;
-        }
-      }
 
       if (dateEl) {
         dateEl.textContent = date;
@@ -3271,6 +3381,18 @@
       const replyBtn = element.querySelector("[data-reply]");
       const editBtn = element.querySelector("[data-comment-edit]");
       const historyBtn = element.querySelector("[data-comment-history]");
+      const reportBtn = element.querySelector("[data-comment-report]");
+
+      const isEditorOrHigher = ["administrator", "editor"].includes(currentUser.role);
+      const isOwn = is_own || commentData?.is_own === true;
+
+      if (reportBtn) {
+        if (isOwn && !isEditorOrHigher) {
+          reportBtn.remove();
+        } else {
+          reportBtn.dataset.commentId = id;
+        }
+      }
 
       if (likeBtn) {
         likeBtn.dataset.commentId = id;
@@ -3354,12 +3476,15 @@
         try {
           const formData = new FormData(form);
           formData.append("action", "add_comment");
+          formData.append("guest_id", guestData.id);
 
           const response = await fetch(ajaxUrl, {
             method: "POST",
             credentials: "same-origin",
             body: formData,
           });
+
+          // formData.append("guest_id", guestData.id);
 
           const data = await response.json().catch(() => null);
           const wrapper = document.querySelector(".comments__wrapper");
@@ -3371,11 +3496,12 @@
 
             const newComment = createCommentElement({
               id: data.data.comment_id,
-              author: authorInput?.value || "",
+              author: getCommentAuthor(),
               text: commentText,
               avatar: window.currentUser.avatar,
               can_delete: true,
               show_reply: isEditorOrHigher,
+              is_own: true,
             });
 
             newComment.classList.add("bounceOutTop");
@@ -3410,9 +3536,10 @@
             const guest = {
               name: authorInput?.value || "",
               email: formData.get("email") || "",
+              id: guestData.id,
             };
 
-            setCookie("comment_guest", JSON.stringify(guest));
+            setCookie("comment_guest", JSON.stringify(guest), 365);
 
             if (authorInput) authorInput.value = guest.name;
             if (emailInput) emailInput.value = guest.email;
@@ -3474,9 +3601,9 @@
 
       const guestFields = showGuestFields
         ? `
-      <input class="input" type="text" name="author" placeholder="Ваше имя" required>
-      <input class="input" type="email" name="email" placeholder="Ваш email" required>
-    `
+        <input class="input" type="text" name="author" placeholder="Ваше имя" required>
+        <input class="input" type="email" name="email" placeholder="Ваш email" required>
+      `
         : "";
 
       const html = `
@@ -3517,12 +3644,12 @@
     if (Array.isArray(window.commentsData) && window.commentsData.length) {
       const wrapper = document.querySelector(".comments__wrapper");
       wrapper.innerHTML = "";
-
       const commentsMap = new Map();
 
       window.commentsData.forEach((comment) => {
-        const isOwnComment = comment.is_own || (currentUser.id === 0 && guestData.email && comment.email && guestData.email === comment.email);
+        const isOwnComment = comment.is_own;
         const isDeleted = comment.is_deleted;
+
         const element = createCommentElement({
           id: comment.id,
           author: comment.author,
@@ -3533,8 +3660,10 @@
           fulltime: comment.fulltime,
           likes: comment.likes,
           dislikes: comment.dislikes,
+          dislikes: comment.dislikes,
           can_delete: isOwnComment && !isDeleted,
           show_reply: !isOwnComment && !isDeleted,
+          edited_at: comment.edited_at,
         });
 
         if (!element) return;
@@ -3542,7 +3671,7 @@
         if (isDeleted) {
           element.classList.add("comment_deleted");
           element.querySelectorAll(".comment__like, .comment__dislike").forEach((btn) => {
-            btn.classList.add("disabled");
+            btn.disabled = true;
             btn.addEventListener("click", (e) => {
               e.preventDefault();
               e.stopImmediatePropagation();
@@ -3635,7 +3764,7 @@
         const formData = new FormData();
         formData.append("action", "delete_comment");
         formData.append("comment_id", button.dataset.commentId);
-        formData.append("guest_email", guestData.email || "");
+        formData.append("guest_id", guestData.id || "");
         formData.append("nonce", LIKE_DATA.nonce.delete);
 
         const response = await fetch(ajaxUrl, { method: "POST", body: formData });
@@ -3666,7 +3795,7 @@
                 setTimeout(() => {
                   parent.remove();
                   updateCommentsUI();
-                }, 200);
+                }, 300);
               }
             }
           }, 600);
@@ -3675,15 +3804,16 @@
         if (data.data.action === "hidden") {
           comment.querySelector(".comment__text").innerHTML = '<em class="gray-text">Комментарий удален</em>';
 
-          comment.querySelectorAll(".comment__like, .comment__dislike").forEach((b) => {
-            b.classList.add("disabled");
-            b.addEventListener("click", (e) => {
+          comment.querySelectorAll(".comment__like, .comment__dislike").forEach((button) => {
+            button.disabled = true;
+            button.addEventListener("click", (e) => {
               e.preventDefault();
               e.stopImmediatePropagation();
             });
           });
 
           comment.querySelector("[data-reply]")?.remove();
+          comment.querySelector("[data-comment-edit]")?.remove();
           comment.classList.add("comment_deleted");
 
           updateCommentsUI();
@@ -3765,6 +3895,21 @@
       if (!textEl) return;
 
       const newText = normalizeContent(textEl.innerHTML);
+      const originalText = normalizeContent(comment.dataset.originalText || "");
+
+      if (newText === originalText) {
+        textEl.innerHTML = originalText;
+        textEl.contentEditable = "false";
+
+        comment.classList.remove("is-editing");
+
+        const actions = comment.querySelector("[data-comment-edit-actions]");
+        if (actions) actions.classList.remove("active");
+
+        delete comment.dataset.originalText;
+        return;
+      }
+
       if (!newText) {
         cancelEdit(comment);
         return;
@@ -3784,7 +3929,7 @@
         const json = await res.json();
         if (!json.success) throw new Error(json.data || "Ошибка сохранения");
 
-        finishEdit(comment, newText);
+        finishEdit(comment, newText, json.data?.edited_at);
       } catch (e) {
         console.error(e);
         cancelEdit(comment);
@@ -3792,13 +3937,20 @@
     };
 
     // Обновление
-    const finishEdit = (comment, html) => {
+    const finishEdit = (comment, html, editedAt) => {
       const text = comment.querySelector("[data-text]");
       if (!text) return;
 
       text.innerHTML = html;
-      text.contentEditable = "false";
 
+      if (editedAt) {
+        let edited = comment.querySelector(".comment__edited");
+
+        edited.dataset.tooltip = editedAt;
+        edited.textContent = "изменено";
+      }
+
+      text.contentEditable = "false";
       comment.classList.remove("is-editing");
 
       const actions = comment.querySelector("[data-comment-edit-actions]");
@@ -3846,10 +3998,7 @@
         if (!json.success) throw new Error(json.data);
 
         const { history, can_restore } = json.data;
-        if (!history.length) {
-          alert("История версий пустая");
-          return;
-        }
+        if (!history.length) return;
 
         const modal = document.querySelector(".modal-comment-history");
         const content = modal.querySelector(".modal-comment-history__content");
@@ -3908,21 +4057,79 @@
       }
     };
 
-    document.addEventListener("click", (e) => {
+    document.addEventListener("click", async (e) => {
       const btn = e.target.closest(".modal-comment-restore");
       if (!btn) return;
 
-      const tr = btn.closest("tr");
-      const text = tr.querySelector("td:nth-child(3)")?.innerHTML;
+      const commentId = btn.dataset.commentId;
+      const index = btn.dataset.versionIndex;
 
-      const comment = document.querySelector(`#comment-${btn.dataset.commentId}`);
+      const comment = document.querySelector(`#comment-${commentId}`);
       if (!comment) return;
 
-      const textEl = comment.querySelector("[data-text]");
-      if (textEl) textEl.innerHTML = text;
+      console.log("[restore] click", {
+        commentId,
+        index,
+        guestId: guestData?.id || null,
+        hasCommentEl: !!comment,
+      });
 
-      fadeOut$1(document.querySelector(".modal-comment-history"));
-      enableEdit(comment);
+      try {
+        const body = new URLSearchParams({
+          action: "restore_comment_version",
+          comment_id: commentId,
+          version_index: index,
+          guest_id: guestData.id || "",
+        });
+
+        console.log("[restore] sending body", Object.fromEntries(body));
+
+        const res = await fetch(ajaxUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body,
+        });
+
+        console.log("[restore] raw response", res);
+
+        const json = await res.json();
+        console.log("[restore] json response", json);
+
+        if (!json.success) {
+          console.error("[restore] server error", json.data);
+          throw new Error(json.data);
+        }
+
+        const historyRow = btn.closest("tr");
+        const restoredHtml = historyRow?.querySelector("td:nth-child(3)")?.innerHTML;
+
+        console.log("[restore] restoredHtml", restoredHtml);
+
+        const textEl = comment.querySelector("[data-text]");
+        console.log("[restore] textEl exists", !!textEl);
+
+        if (textEl && restoredHtml) {
+          textEl.innerHTML = restoredHtml;
+        }
+
+        if (json.data?.edited_at) {
+          const edited = comment.querySelector(".comment__edited");
+          console.log("[restore] edited label", edited);
+
+          if (edited) {
+            edited.textContent = "изменено";
+            edited.dataset.tooltip = json.data.edited_at;
+          }
+        }
+
+        fadeOut(document.querySelector(".modal-comment-history"));
+        notify("Восстановлено", `Версия комментария за ${json.data.edited_at} успешно восстановлена`, "success", true, 4000);
+      } catch (err) {
+        console.error("[restore] CATCH", err);
+        alert("Ошибка восстановления версии");
+      }
     });
 
     //
@@ -3948,6 +4155,15 @@
       const form = e.target;
       const text = form.querySelector("textarea").value.trim();
       if (!text) return;
+
+      const comment = window.commentsData?.find((c) => c.id == commentId);
+
+      const isEditorOrHigher = ["administrator", "editor"].includes(currentUser.role);
+
+      if (comment?.is_own && !isEditorOrHigher) {
+        notify("Нельзя пожаловаться на свой комментарий", "", "danger");
+        return;
+      }
 
       const res = await fetch(ajaxUrl, {
         method: "POST",
