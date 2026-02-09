@@ -133,13 +133,16 @@ export function initFormValidation(form) {
 
       const hasChoiceValue = getHasChoiceValue();
       const inputTel = form.querySelector('input[type="tel"]');
-      const digits = inputTel.value.replace(/\D/g, "");
 
-      if (!hasChoiceValue && digits.length > 0 && digits.length !== 11) {
-        e.preventDefault();
-        isValid = false;
-      } else {
-        inputTel.setCustomValidity("");
+      if (inputTel) {
+        const digits = inputTel.value.replace(/\D/g, "");
+
+        if (!hasChoiceValue && digits.length > 0 && digits.length !== 11) {
+          e.preventDefault();
+          isValid = false;
+        } else {
+          inputTel.setCustomValidity("");
+        }
       }
 
       if (!isValid || !form.checkValidity()) {

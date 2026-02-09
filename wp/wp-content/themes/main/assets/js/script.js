@@ -867,13 +867,16 @@
 
         const hasChoiceValue = getHasChoiceValue();
         const inputTel = form.querySelector('input[type="tel"]');
-        const digits = inputTel.value.replace(/\D/g, "");
 
-        if (!hasChoiceValue && digits.length > 0 && digits.length !== 11) {
-          e.preventDefault();
-          isValid = false;
-        } else {
-          inputTel.setCustomValidity("");
+        if (inputTel) {
+          const digits = inputTel.value.replace(/\D/g, "");
+
+          if (!hasChoiceValue && digits.length > 0 && digits.length !== 11) {
+            e.preventDefault();
+            isValid = false;
+          } else {
+            inputTel.setCustomValidity("");
+          }
         }
 
         if (!isValid || !form.checkValidity()) {
@@ -982,7 +985,11 @@
 
   function form() {
     allForms.forEach((form) => {
-      if (form.classList.contains("wpcf7-form")) return;
+      const action = (form.getAttribute("action") || "").trim();
+
+      if (form.classList.contains("wpcf7-form") || (action !== "" && action !== "mail.php" && action !== "/mail.php")) {
+        return;
+      }
 
       if (!form.hasAttribute("enctype")) {
         form.setAttribute("enctype", "multipart/form-data");
@@ -4067,13 +4074,6 @@
       const comment = document.querySelector(`#comment-${commentId}`);
       if (!comment) return;
 
-      console.log("[restore] click", {
-        commentId,
-        index,
-        guestId: guestData?.id || null,
-        hasCommentEl: !!comment,
-      });
-
       try {
         const body = new URLSearchParams({
           action: "restore_comment_version",
@@ -4081,8 +4081,6 @@
           version_index: index,
           guest_id: guestData.id || "",
         });
-
-        console.log("[restore] sending body", Object.fromEntries(body));
 
         const res = await fetch(ajaxUrl, {
           method: "POST",
@@ -4092,10 +4090,7 @@
           body,
         });
 
-        console.log("[restore] raw response", res);
-
         const json = await res.json();
-        console.log("[restore] json response", json);
 
         if (!json.success) {
           console.error("[restore] server error", json.data);
@@ -4104,11 +4099,7 @@
 
         const historyRow = btn.closest("tr");
         const restoredHtml = historyRow?.querySelector("td:nth-child(3)")?.innerHTML;
-
-        console.log("[restore] restoredHtml", restoredHtml);
-
         const textEl = comment.querySelector("[data-text]");
-        console.log("[restore] textEl exists", !!textEl);
 
         if (textEl && restoredHtml) {
           textEl.innerHTML = restoredHtml;
@@ -4116,7 +4107,6 @@
 
         if (json.data?.edited_at) {
           const edited = comment.querySelector(".comment__edited");
-          console.log("[restore] edited label", edited);
 
           if (edited) {
             edited.textContent = "изменено";
@@ -4143,21 +4133,25 @@
       if (!commentId) return;
 
       const modal = document.querySelector(".modal-comment-report");
-      openModal(modal, false);
+      const form = modal.querySelector("form");
 
-      modal.querySelector("form").addEventListener("submit", (e) => submitReport(e, commentId));
+      form.dataset.commentId = commentId;
+
+      openModal(modal, false);
     };
 
-    const submitReport = async (e, commentId) => {
+    const submitReport = async (e) => {
       e.preventDefault();
 
-      const modal = document.querySelector(".modal-comment-report");
       const form = e.target;
+      const commentId = form.dataset.commentId;
+      if (!commentId) return;
+
+      const modal = document.querySelector(".modal-comment-report");
       const text = form.querySelector("textarea").value.trim();
       if (!text) return;
 
       const comment = window.commentsData?.find((c) => c.id == commentId);
-
       const isEditorOrHigher = ["administrator", "editor"].includes(currentUser.role);
 
       if (comment?.is_own && !isEditorOrHigher) {
@@ -4178,15 +4172,18 @@
 
       const json = await res.json();
 
+      closeModal(modal);
+
       if (!json.success) {
         notify("Жалоба отклонена", "Вы уже отправляли жалобу", "danger");
-        closeModal(modal);
+        modal.querySelector("form").reset();
         return;
       }
 
-      closeModal(modal);
       notify("Жалоба отправлена", "", "success");
     };
+
+    document.querySelector(".modal-comment-report form").addEventListener("submit", submitReport);
 
     //
     //

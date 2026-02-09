@@ -46,7 +46,6 @@ $close-color: var(--gray_dark)
 									
 		+scrollbar(90vh, $scrollBarWidth: 4, $padding: 5) 
 		width: $max-width
-		max-width: 96%
 		
 		background: #fff
 		+brs
@@ -124,20 +123,6 @@ $close-color: var(--gray_dark)
 		img 
 			+adap('width', 100, 60)
 			+adap('height', 100, 60)
-
-	&-comment-history
-		.modal-comment-history 
-			&__content 
-				table
-					@media (max-width: 575px)
-						font-size: 12px
-
-				tbody
-					tr
-						&>*
-							&:nth-child(3)
-								display: inline-block
-								+adap('width', 400, 200)
 
 	@media (max-width: 575px)
 		&__dialog

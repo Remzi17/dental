@@ -86,18 +86,18 @@
 				$guest_cookie_id = null;
 
 				if ($guest_cookie) {
-						$guest_cookie_data = json_decode(stripslashes($guest_cookie), true);
-						$guest_cookie_id = $guest_cookie_data['id'] ?? null;
+					$guest_cookie_data = json_decode(stripslashes($guest_cookie), true);
+					$guest_cookie_id = $guest_cookie_data['id'] ?? null;
 				}
 
 				$is_own = false;
 
 				if (!$c->user_id && $guest_cookie_id) {
-						$comment_guest_id = get_comment_meta($c->comment_ID, 'guest_id', true);
+					$comment_guest_id = get_comment_meta($c->comment_ID, 'guest_id', true);
 
-						if ($comment_guest_id && $comment_guest_id === $guest_cookie_id) {
-								$is_own = true;
-						}
+					if ($comment_guest_id && $comment_guest_id === $guest_cookie_id) {
+						$is_own = true;
+					}
 				}
 
 				return [
@@ -117,8 +117,10 @@
 					'is_own_like' => $is_own_like,
 					'is_own_dislike' => $is_own_dislike,
 					'is_deleted' => $is_deleted,
-					'can_delete' => can_delete_comment($c),
-					'can_edit' => can_edit_comment($c),
+					
+					'can_delete' => can_comment_action($c, 'delete'),
+					'can_edit' => can_comment_action($c, 'edit'),
+					
 					'has_history' => !empty(get_comment_meta($c->comment_ID, 'comment_edit_history', true)),
 					'edited_at' => get_comment_meta($c->comment_ID, 'comment_edited_at', true)
 				];
@@ -142,7 +144,6 @@
 				]);
 
 				$trashed_with_replies = array_filter($trashed_with_replies, function($comment) {
-
 					$children = get_comments([
 						'parent' => $comment->comment_ID,
 						'status' => 'approve',

@@ -6,16 +6,19 @@
 	position: absolute
 	z-index: 10
 
-	opacity: 0
-	pointer-events: none
-	+t(.2)
-	translate: 0 -8px
-
 	font-size: 14px
 
+	pointer-events: none
+	opacity: 0
+	transform: perspective(900px) rotateX(-12deg) translateY(-8px) scale(.98)
+	transform-origin: top
+	pointer-events: none
+	+t(.2)
+
+
 	&.active
-		translate: 0 0
 		opacity: 1
+		transform: perspective(900px) rotateX(0) translateY(0) scale(1)
 		pointer-events: auto
 
 .context-menu  
@@ -41,13 +44,14 @@
 		+bx
 		overflow: hidden
 		
-
 	&__item 
 		display: flex
 		align-items: center
 		padding: em(8) em(16)
 		width: 100%
 		gap: 4px
+
+		+adap('font-size', 16, 12)
 
 		transition: background .3s
 

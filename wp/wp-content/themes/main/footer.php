@@ -277,10 +277,10 @@
 					<svg class="close">
 						<use xlink:href="<?=get_template_directory_uri()?>/assets/img/sprite.svg?ver=<?=spriteVersion()?>#close"></use>
 					</svg>
-				</button>
+				</button> 
 				<div class="form modal__form">
 					<div class="title-2 modal__title">Оставить жалобу</div>
-					<form>
+					<form action="false">
 						<div class="form__fields" style="--columns: 2">
 							<textarea class="textarea" name="message" cols="30" rows="5" placeholder="Опишите причину*" required data-columns="full"></textarea>
 							<button class="button submit justify-center" data-columns="full">Отправить</button>

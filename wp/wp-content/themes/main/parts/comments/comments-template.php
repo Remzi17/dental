@@ -11,13 +11,13 @@
 				</div>
 				<time class="gray-text comment__date" datetime="" itemprop="datePublished" data-date data-tooltip></time>
 				<span class="comment__edited" data-edited data-tooltip></span>
-				<div class="context-menu active" data-context>
+				<div class="context-menu" data-context>
 					<button class="context-menu__button" type="button" aria-label="Открыть меню" title="Открыть меню">
 						<svg class="dots-icon" aria-hidden="true">
 							<use xlink:href="<?=get_template_directory_uri()?>/assets/img/sprite.svg?ver=<?=spriteVersion()?>#dots"></use>
 						</svg>
 					</button>
-					<div class="context-menu__list active" data-context-menu data-tab-focus=".context-menu__button,.active">
+					<div class="context-menu__list" data-context-menu data-tab-focus=".context-menu__button,.active">
 						<button class="context-menu__item" type="button" data-comment-edit aria-label="Редактировать комментарий" title="Редактировать комментарий">
 							<svg version="1.1" viewBox="144 144 512 512" xmlns="http://www.w3.org/2000/svg">
 								<g id="IconSvg_bgCarrier" ></g>

@@ -1,5 +1,5 @@
 .comments
-	+adap('padding', 40, 16)
+	+adap('padding', 40, 12)
 	+bx
 	+adap('border-radius', 40, 16)
 
@@ -14,23 +14,14 @@
 		position: sticky
 		bottom: 12px
 
-		&:after
-			content: ''
-			position: absolute
-			left: 0
-			top: 100%
-			width: 100%
-			+adap('height', 40, 16)
-			background: #fff
-
-
-
 :root
 	interpolate-size: allow-keywords
   
 .comment
 	position: relative
 	+adap('margin-bottom', 24, 12)
+
+	+adap('font-size', 16, 14)
 
 	+t
 
@@ -68,15 +59,18 @@
 		display: flex
 		align-items: center 
 		justify-content: space-between
-		gap: 12px
+		+adap('gap', 12, 8)
+		flex-wrap: wrap
+
+		+adap('font-size', 16, 12)
 
 	&__header,
 	&__text
-		margin-bottom: 12px
+		+adap('margin-bottom', 12, 8)
 
 	&__edited 
 		margin-right: auto
-		font-size: 12px
+		+adap('font-size', 12, 9)
 		color: var(--gray_dark)
 
 	&__author 
@@ -151,7 +145,7 @@
 
 	& &
 		margin-top: 12px
-		+adap('margin-left', 60, 32)
+		+adap('margin-left', 60, 16)
 
 	&-add 
 		position: relative
@@ -258,6 +252,25 @@
 
 
 
+
+.modal-comment-history
+	.modal__content
+		padding-inline: 0
+		
+	.modal-comment-history__content 
+		table
+			@media (max-width: 575px)
+				font-size: 11px
+
+		tbody
+			tr
+				&>*
+					&:nth-child(3)
+						display: inline-block
+						+adap('width', 400, 200)
+
+						@media (max-width: 575px)
+							+adap('width', 200, 170, 575)
 
 
 

@@ -837,13 +837,6 @@ export function comment() {
     const comment = document.querySelector(`#comment-${commentId}`);
     if (!comment) return;
 
-    console.log("[restore] click", {
-      commentId,
-      index,
-      guestId: guestData?.id || null,
-      hasCommentEl: !!comment,
-    });
-
     try {
       const body = new URLSearchParams({
         action: "restore_comment_version",
@@ -851,8 +844,6 @@ export function comment() {
         version_index: index,
         guest_id: guestData.id || "",
       });
-
-      console.log("[restore] sending body", Object.fromEntries(body));
 
       const res = await fetch(ajaxUrl, {
         method: "POST",
@@ -862,10 +853,7 @@ export function comment() {
         body,
       });
 
-      console.log("[restore] raw response", res);
-
       const json = await res.json();
-      console.log("[restore] json response", json);
 
       if (!json.success) {
         console.error("[restore] server error", json.data);
@@ -874,11 +862,7 @@ export function comment() {
 
       const historyRow = btn.closest("tr");
       const restoredHtml = historyRow?.querySelector("td:nth-child(3)")?.innerHTML;
-
-      console.log("[restore] restoredHtml", restoredHtml);
-
       const textEl = comment.querySelector("[data-text]");
-      console.log("[restore] textEl exists", !!textEl);
 
       if (textEl && restoredHtml) {
         textEl.innerHTML = restoredHtml;
@@ -886,7 +870,6 @@ export function comment() {
 
       if (json.data?.edited_at) {
         const edited = comment.querySelector(".comment__edited");
-        console.log("[restore] edited label", edited);
 
         if (edited) {
           edited.textContent = "изменено";
@@ -913,21 +896,25 @@ export function comment() {
     if (!commentId) return;
 
     const modal = document.querySelector(".modal-comment-report");
-    openModal(modal, false);
+    const form = modal.querySelector("form");
 
-    modal.querySelector("form").addEventListener("submit", (e) => submitReport(e, commentId));
+    form.dataset.commentId = commentId;
+
+    openModal(modal, false);
   };
 
-  const submitReport = async (e, commentId) => {
+  const submitReport = async (e) => {
     e.preventDefault();
 
-    const modal = document.querySelector(".modal-comment-report");
     const form = e.target;
+    const commentId = form.dataset.commentId;
+    if (!commentId) return;
+
+    const modal = document.querySelector(".modal-comment-report");
     const text = form.querySelector("textarea").value.trim();
     if (!text) return;
 
     const comment = window.commentsData?.find((c) => c.id == commentId);
-
     const isEditorOrHigher = ["administrator", "editor"].includes(currentUser.role);
 
     if (comment?.is_own && !isEditorOrHigher) {
@@ -948,15 +935,18 @@ export function comment() {
 
     const json = await res.json();
 
+    closeModal(modal);
+
     if (!json.success) {
       notify("Жалоба отклонена", "Вы уже отправляли жалобу", "danger");
-      closeModal(modal);
+      modal.querySelector("form").reset();
       return;
     }
 
-    closeModal(modal);
     notify("Жалоба отправлена", "", "success");
   };
+
+  document.querySelector(".modal-comment-report form").addEventListener("submit", submitReport);
 
   //
   //

@@ -11,7 +11,11 @@ import { allForms } from "../scripts/variables";
 
 export function form() {
   allForms.forEach((form) => {
-    if (form.classList.contains("wpcf7-form")) return;
+    const action = (form.getAttribute("action") || "").trim();
+
+    if (form.classList.contains("wpcf7-form") || (action !== "" && action !== "mail.php" && action !== "/mail.php")) {
+      return;
+    }
 
     if (!form.hasAttribute("enctype")) {
       form.setAttribute("enctype", "multipart/form-data");

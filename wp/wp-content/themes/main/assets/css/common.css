@@ -419,7 +419,6 @@
   overflow-y: auto;
   overflow-x: hidden;
   width: 500px;
-  max-width: 96%;
   background: #fff;
   cursor: default;
   transition: all 0.4s;
@@ -589,24 +588,6 @@
 @media (min-width: 1501px) {
   .modal-thank img {
     height: 100px;
-  }
-}
-@media (max-width: 575px) {
-  .modal-comment-history .modal-comment-history__content table {
-    font-size: 12px;
-  }
-}
-.modal-comment-history .modal-comment-history__content tbody tr > *:nth-child(3) {
-  display: inline-block;
-}
-@media (max-width: 1500px) {
-  .modal-comment-history .modal-comment-history__content tbody tr > *:nth-child(3) {
-    width: round(clamp(min(400px, 200px),  160px  +  12.5vw , max(400px, 200px)), 1px);
-  }
-}
-@media (min-width: 1501px) {
-  .modal-comment-history .modal-comment-history__content tbody tr > *:nth-child(3) {
-    width: 400px;
   }
 }
 @media (max-width: 575px) {
